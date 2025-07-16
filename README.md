@@ -1,2 +1,0 @@
-# ProyectoStreamlit
-Trabajo final Streamlit

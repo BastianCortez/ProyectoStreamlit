@@ -235,19 +235,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("""
-    <div class="navigation-card">
-        <h3>Explorador Comparativo</h3>
-        <p>Herramientas avanzadas para comparar perfumes, encontrar similitudes 
-        y explorar recomendaciones.</p>
-        <ul>
-            <li><strong>Comparador lado a lado</strong></li>
-            <li><strong>Búsqueda por similitud</strong></li>
-            <li><strong>Recomendaciones automáticas</strong></li>
-            <li><strong>Explorador de pirámides olfativas</strong></li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    
 
 # Insights principales del dataset
 st.markdown("---")

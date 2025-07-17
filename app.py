@@ -1,7 +1,47 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
-from Utils.data_loader import load_perfume_data, get_accord_stats
+
+# Importar funciones propias (con manejo de errores para diferentes estructuras)
+try:
+    from Utils.data_loader import load_perfume_data, get_accord_stats
+except ImportError:
+    try:
+        from utils.data_loader import load_perfume_data, get_accord_stats
+    except ImportError:
+        # Fallback: definir funciones básicas aquí
+        @st.cache_data
+        def load_perfume_data():
+            try:
+                df = pd.read_csv('data/perfumes_ordenado.csv')
+                accord_columns = [col for col in df.columns if col.startswith('accords.')]
+                df[accord_columns] = df[accord_columns].fillna(0)
+                return df
+            except Exception as e:
+                st.error(f"Error al cargar datos: {e}")
+                return pd.DataFrame()
+        
+        def get_accord_stats(df):
+            accord_columns = [col for col in df.columns if col.startswith('accords.')]
+            stats = {}
+            
+            for col in accord_columns:
+                values = df[col].dropna()
+                non_zero_values = values[values > 0]
+                
+                if len(non_zero_values) > 0:
+                    stats[col] = {
+                        'frequency': len(non_zero_values),
+                        'mean_intensity': non_zero_values.mean(),
+                        'median_intensity': non_zero_values.median(),
+                        'max_intensity': non_zero_values.max(),
+                        'min_intensity': non_zero_values.min(),
+                        'std_intensity': non_zero_values.std(),
+                        'perfume_percentage': (len(non_zero_values) / len(df)) * 100
+                    }
+            
+            return stats
 
 # Configuración de página principal
 st.set_page_config(
@@ -11,15 +51,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Configuración de página principal
-st.set_page_config(
-    page_title="Dashboard de Perfumes - Análisis Olfativo",
-    page_icon="🌸",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
-# CSS personalizado para mejorar la apariencia
 st.markdown("""
 <style>
     .main-header {
@@ -181,16 +213,16 @@ if df.empty:
 
 # Sidebar con información general
 st.sidebar.title("Información del Dataset")
-st.sidebar.metric("Total de Perfumes", f"{len(df):,}")
+st.sidebar.metric("Total de Perfumes", f"{len(df):,}", key="sidebar_total_perfumes")
 
 # Calcular estadísticas rápidas
 accord_columns = [col for col in df.columns if col.startswith('accords.')]
 active_accords = sum(1 for col in accord_columns if df[col].sum() > 0)
-st.sidebar.metric("Acordes Activos", f"{active_accords}/74")
+st.sidebar.metric("Acordes Activos", f"{active_accords}/74", key="sidebar_active_accords")
 
 avg_rating = df['calificationNumbers.ratingValue'].mean()
 if not pd.isna(avg_rating):
-    st.sidebar.metric("Rating Promedio", f"{avg_rating:.2f}/5.0")
+    st.sidebar.metric("Rating Promedio", f"{avg_rating:.2f}/5.0", key="sidebar_avg_rating")
 
 # Navegación principal
 st.markdown('<h2 class="section-title">Navegación del Dashboard</h2>', unsafe_allow_html=True)
@@ -360,12 +392,13 @@ fig.update_layout(
 
 # Envolver el gráfico en un contenedor
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, use_container_width=True, key="main_top_accords_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 yaxis=dict(
         gridcolor='#ECF0F1',
         linecolor='#BDC3C7'
     )
+
 
 # Envolver el gráfico en un contenedor
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)

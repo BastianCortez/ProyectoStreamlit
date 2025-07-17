@@ -151,7 +151,7 @@ def create_rating_vs_reviews_scatter(df_filtered):
     )
     
     fig.update_layout(
-        height=500,
+        height=300,
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),
@@ -387,7 +387,7 @@ def main():
     ]
     
     # Métricas principales
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("Perfumes Analizados", len(df_filtered))
@@ -397,9 +397,6 @@ def main():
     
     with col3:
         st.metric("Total Reviews", f"{df_filtered['ratingCount'].sum():,}" if len(df_filtered) > 0 else "0")
-    
-    with col4:
-        st.metric("Valor Promedio", f"{df_filtered['value_score'].mean():.1f}" if len(df_filtered) > 0 else "N/A")
     
     st.markdown("---")
     

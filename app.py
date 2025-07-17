@@ -213,16 +213,16 @@ if df.empty:
 
 # Sidebar con información general
 st.sidebar.title("Información del Dataset")
-st.sidebar.metric("Total de Perfumes", f"{len(df):,}", key="sidebar_total_perfumes")
+st.sidebar.metric("Total de Perfumes", f"{len(df):,}")
 
 # Calcular estadísticas rápidas
 accord_columns = [col for col in df.columns if col.startswith('accords.')]
 active_accords = sum(1 for col in accord_columns if df[col].sum() > 0)
-st.sidebar.metric("Acordes Activos", f"{active_accords}/74", key="sidebar_active_accords")
+st.sidebar.metric("Acordes Activos", f"{active_accords}/74")
 
 avg_rating = df['calificationNumbers.ratingValue'].mean()
 if not pd.isna(avg_rating):
-    st.sidebar.metric("Rating Promedio", f"{avg_rating:.2f}/5.0", key="sidebar_avg_rating")
+    st.sidebar.metric("Rating Promedio", f"{avg_rating:.2f}/5.0")
 
 # Navegación principal
 st.markdown('<h2 class="section-title">Navegación del Dashboard</h2>', unsafe_allow_html=True)

@@ -151,7 +151,7 @@ def create_rating_vs_reviews_scatter(df_filtered):
     )
     
     fig.update_layout(
-        height=300,
+        height=500,
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),

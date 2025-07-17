@@ -361,7 +361,7 @@ def main():
     
     with col2:
         season_total = df_filtered[['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']].sum().sum()
-        st.metric("Total Votos Estacionales", f"{season_total:,}")
+        st.metric("Total Votos Estacionales", f"{season_total:.0f}")
     
     with col3:
         day_night_total = df_filtered[['timeDay.Dia', 'timeDay.Noche']].sum().sum()

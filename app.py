@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from utils.data_loader import load_perfume_data, get_accord_stats
-
+from Utils.data_loader import load_perfume_data, get_accord_stats
 # Configuración de página principal
 st.set_page_config(
     page_title="Dashboard de Perfumes - Análisis Olfativo",

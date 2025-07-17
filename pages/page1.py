@@ -9,8 +9,8 @@ from plotly.subplots import make_subplots
 
 # Importar funciones propias (con manejo de errores)
 try:
-    from utils.data_loader import load_perfume_data
-    from utils.plotting import create_custom_palette, download_plot_button
+    from Utils.data_loader import load_perfume_data
+    from Utils.plotting import create_custom_palette, download_plot_button
 except ImportError:
     st.error("No se pueden importar las utilidades. Asegúrate de que los archivos utils/ estén en la ubicación correcta.")
     st.stop()
@@ -27,7 +27,7 @@ st.set_page_config(
 def load_data():
     try:
         # Intentar cargar desde utils
-        from utils.data_loader import load_perfume_data
+        from Utils.data_loader import load_perfume_data
         return load_perfume_data()
     except ImportError:
         # Fallback: cargar directamente

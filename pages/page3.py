@@ -291,7 +291,7 @@ def create_season_gender_heatmap(df_filtered):
         colorscale='RdYlBu',
         colorbar=dict(
             title=dict(
-                text="Intensidad de Preferencia",
+                text="Promedio de votos",
                 font=dict(color='#2C3E50')
             ),
             tickfont=dict(color='#2C3E50')

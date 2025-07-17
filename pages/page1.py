@@ -4,8 +4,8 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import seaborn as sns
-import matplotlib.pyplot as plt
+
+
 
 # Importar funciones propias (con manejo de errores)
 try:
@@ -27,7 +27,7 @@ st.set_page_config(
 def load_data():
     try:
         # Intentar cargar desde utils
-        from utils.data_loader import load_perfume_data
+        from Utils.data_loader import load_perfume_data
         return load_perfume_data()
     except ImportError:
         # Fallback: cargar directamente
@@ -216,7 +216,7 @@ with col1:
                 plot_bgcolor='white'
             )
             
-            st.plotly_chart(fig_radar, use_container_width=True, key="acordes_radar_chart")
+            st.plotly_chart(fig_radar, use_container_width=True)
             download_plot_button(fig_radar, "radar_acordes")
         else:
             st.warning("No se encontraron datos para los acordes seleccionados.")
@@ -241,18 +241,10 @@ with col2:
     
     # Mostrar tabla estilizada
     st.dataframe(
-        ranking_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Perfumes": st.column_config.BarColumn(
-                "Perfumes",
-                help="Número de perfumes que contienen este acorde",
-                min_value=0,
-                max_value=ranking_df['Perfumes'].max(),
-            ),
-        }
-    )
+    ranking_df,
+    use_container_width=True,
+    hide_index=True
+)
 
 # SEGUNDA FILA DE VISUALIZACIONES
 st.markdown("---")
@@ -305,7 +297,7 @@ with col3:
         fig_hist.update_xaxes(title_text="Intensidad (%)")
         fig_hist.update_yaxes(title_text="Frecuencia")
         
-        st.plotly_chart(fig_hist, use_container_width=True, key="acordes_hist_chart")
+        st.plotly_chart(fig_hist, use_container_width=True)
         download_plot_button(fig_hist, "distribuciones_intensidad")
 
 with col4:
@@ -331,7 +323,6 @@ with col4:
         zmid=0,
         colorbar=dict(
             title="Correlación",
-            titleside="right",
             tickmode="linear",
             tick0=-1,
             dtick=0.5
@@ -350,7 +341,7 @@ with col4:
         paper_bgcolor='white'
     )
     
-    st.plotly_chart(fig_corr, use_container_width=True, key="acordes_corr_chart")
+    st.plotly_chart(fig_corr, use_container_width=True)
     download_plot_button(fig_corr, "correlaciones_acordes")
 
 # INSIGHTS Y CONCLUSIONES

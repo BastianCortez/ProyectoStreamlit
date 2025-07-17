@@ -372,32 +372,4 @@ with col4:
     st.plotly_chart(fig_corr, use_container_width=True)
     download_plot_button(fig_corr, "correlaciones_acordes")
 
-# INSIGHTS Y CONCLUSIONES
-st.markdown("---")
-st.subheader("Insights Clave")
 
-insight_cols = st.columns(3)
-
-with insight_cols[0]:
-    most_frequent = top_accords[0]
-    st.metric(
-        "Acorde Más Frecuente",
-        most_frequent[0].replace('accords.', '').title(),
-        f"{most_frequent[1]['perfume_percentage']:.1f}% de perfumes"
-    )
-
-with insight_cols[1]:
-    avg_intensity = np.mean([stats['mean_intensity'] for _, stats in top_accords[:5]])
-    st.metric(
-        "Intensidad Promedio (Top 5)",
-        f"{avg_intensity:.1f}%",
-        "Acordes principales"
-    )
-
-with insight_cols[2]:
-    total_combinations = len([acc for acc in accord_columns if df[acc].sum() > 0])
-    st.metric(
-        "Acordes Activos",
-        f"{total_combinations}",
-        "De 74 posibles"
-    )

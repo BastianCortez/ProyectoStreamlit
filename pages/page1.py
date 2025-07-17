@@ -4,16 +4,12 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+import seaborn as sns
+import matplotlib.pyplot as plt
 
+from Utils.data_loader import load_perfume_data
+from Utils.plotting import create_custom_palette, download_plot_button
 
-
-# Importar funciones propias (con manejo de errores)
-try:
-    from Utils.data_loader import load_perfume_data
-    from Utils.plotting import create_custom_palette, download_plot_button
-except ImportError:
-    st.error("No se pueden importar las utilidades. Asegúrate de que los archivos utils/ estén en la ubicación correcta.")
-    st.stop()
 
 # Configuración de página
 st.set_page_config(
@@ -27,7 +23,7 @@ st.set_page_config(
 def load_data():
     try:
         # Intentar cargar desde utils
-        from Utils.data_loader import load_perfume_data
+        from utils.data_loader import load_perfume_data
         return load_perfume_data()
     except ImportError:
         # Fallback: cargar directamente
@@ -241,10 +237,18 @@ with col2:
     
     # Mostrar tabla estilizada
     st.dataframe(
-    ranking_df,
-    use_container_width=True,
-    hide_index=True
-)
+        ranking_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Perfumes": st.column_config.BarColumn(
+                "Perfumes",
+                help="Número de perfumes que contienen este acorde",
+                min_value=0,
+                max_value=ranking_df['Perfumes'].max(),
+            ),
+        }
+    )
 
 # SEGUNDA FILA DE VISUALIZACIONES
 st.markdown("---")
@@ -323,6 +327,7 @@ with col4:
         zmid=0,
         colorbar=dict(
             title="Correlación",
+            titleside="right",
             tickmode="linear",
             tick0=-1,
             dtick=0.5
@@ -346,7 +351,7 @@ with col4:
 
 # INSIGHTS Y CONCLUSIONES
 st.markdown("---")
-st.subheader("🧠 Insights Clave")
+st.subheader("Insights Clave")
 
 insight_cols = st.columns(3)
 
@@ -375,13 +380,14 @@ with insight_cols[2]:
     )
 
 # Información técnica
-with st.expander("ℹ️ Información Técnica"):
+with st.expander("Información Técnica"):
     st.markdown("""
     **Metodología de Análisis:**
     - **Acordes**: Intensidades expresadas como porcentajes (0-100%)
     - **Frecuencia**: Número de perfumes que contienen cada acorde
     - **Correlaciones**: Coeficiente de Pearson entre intensidades de acordes
     - **Filtros**: Aplicados dinámicamente según selección del usuario
+    - **Dataset**: 521 perfumes con información completa
     
-    **Paleta de Colores**: Personalizada para evocar tonalidades de perfumería
+    **Paleta de Colores**: Diseño profesional con alta legibilidad
     """)

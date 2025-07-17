@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from Utils.data_loader import load_perfume_data
 from Utils.plotting import create_custom_palette, download_plot_button
 
-
 # Configuración de página
 st.set_page_config(
     page_title="Acordes y Composición - Dashboard Perfumes",
@@ -22,7 +21,8 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     try:
-        return load_perfume_data()
+        df = load_perfume_data()
+        return df.head(521)  # Solo primeros 521
     except ImportError:
         # Fallback: cargar directamente
         try:
@@ -30,7 +30,7 @@ def load_data():
             # Limpieza básica
             accord_columns = [col for col in df.columns if col.startswith('accords.')]
             df[accord_columns] = df[accord_columns].fillna(0)
-            return df
+            return df.head(521)
         except Exception as e:
             st.error(f"Error al cargar datos: {e}")
             return pd.DataFrame()
@@ -39,7 +39,7 @@ def download_plot_button(fig, filename_prefix):
     """Función simple para descargar gráficos"""
     html_bytes = fig.to_html().encode()
     st.download_button(
-        label="📥 Descargar Gráfico",
+        label="Descargar Gráfico",
         data=html_bytes,
         file_name=f"{filename_prefix}.html",
         mime="text/html",
@@ -48,26 +48,22 @@ def download_plot_button(fig, filename_prefix):
 
 df = load_data()
 
-# PALETAS PERSONALIZADAS
-# Paleta principal: tonos cálidos inspirados en perfumería
+# PALETAS PROFESIONALES
 PRIMARY_PALETTE = [
-    '#8B4513',  # Marrón cálido (amaderado)
-    '#D2B48C',  # Beige (atalcado) 
-    '#FFB6C1',  # Rosa claro (dulce)
-    '#FF8C00',  # Naranja (cítrico)
-    '#9ACD32',  # Verde lima (aromático)
-    '#DDA0DD',  # Ciruela (florales)
-    '#CD853F',  # Marrón claro (cálido especiado)
-    '#FF69B4',  # Rosa intenso (afrutados)
-    '#20B2AA',  # Verde azulado (fresco especiado)
-    '#F4A460'   # Arena (ámbar)
+    '#2C3E50',  # Azul oscuro profesional
+    '#34495E',  # Gris azulado
+    '#3498DB',  # Azul claro
+    '#2980B9',  # Azul medio
+    '#1ABC9C',  # Verde agua
+    '#16A085',  # Verde agua oscuro
+    '#27AE60',  # Verde
+    '#229954',  # Verde oscuro
+    '#F39C12',  # Naranja
+    '#E67E22'   # Naranja oscuro
 ]
 
-# Paleta de intensidades: gradiente dorado
-INTENSITY_PALETTE = ['#FFF8DC', '#F0E68C', '#DAA520', '#B8860B', '#8B7355']
-
-# Paleta de correlaciones: divergente personalizada
-CORRELATION_PALETTE = ['#8B0000', '#FF6347', '#FFF8DC', '#98FB98', '#006400']
+# Paleta de correlaciones
+CORRELATION_PALETTE = ['#E74C3C', '#EC7063', '#F8F9FA', '#82E0AA', '#27AE60']
 
 def hex_to_rgba(hex_color, alpha=0.2):
     """Convierte color hex a formato rgba"""
@@ -77,12 +73,12 @@ def hex_to_rgba(hex_color, alpha=0.2):
 # TÍTULO Y INTRODUCCIÓN
 st.title("Análisis de Acordes y Composición")
 st.markdown("""
-Explora la complejidad aromática de **3,196 perfumes** a través de sus acordes más característicos.
+Explora la complejidad aromática de **521 perfumes** a través de sus acordes más característicos.
 Los acordes representan las familias olfativas que definen la personalidad de cada fragancia.
 """)
 
 # SIDEBAR - CONTROLES INTERACTIVOS
-st.sidebar.header("🎛️ Controles de Filtrado")
+st.sidebar.header("Controles de Filtrado")
 
 # Obtener lista de acordes
 accord_columns = [col for col in df.columns if col.startswith('accords.')]
@@ -137,7 +133,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     # VISUALIZACIÓN 1: RADAR CHART DE ACORDES SELECCIONADOS
-    st.subheader("🎯 Perfil Aromático - Acordes Seleccionados")
+    st.subheader("Perfil Aromático - Acordes Seleccionados")
     
     if selected_accords:
         # Preparar datos para radar
@@ -188,19 +184,19 @@ with col1:
             ))
             
             fig_radar.update_layout(
-                    polar=dict(
-                        radialaxis=dict(
-                            visible=True,
-                            range=[0, 100],
-                            tickfont=dict(size=11, color='#2C3E50'),  
-                            gridcolor='#ECF0F1',
-                            linecolor='#BDC3C7'
-                        ),
-                        angularaxis=dict(
-                            tickfont=dict(size=12, color='#2C3E50'),  
-                            linecolor='#BDC3C7'
-                        )
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 100],
+                        tickfont=dict(size=11, color='#2C3E50'),  
+                        gridcolor='#ECF0F1',
+                        linecolor='#BDC3C7'
                     ),
+                    angularaxis=dict(
+                        tickfont=dict(size=12, color='#2C3E50'),  
+                        linecolor='#BDC3C7'
+                    )
+                ),
                 showlegend=True,
                 title=dict(
                     text="Comparación de Frecuencia vs Intensidad",
@@ -209,7 +205,14 @@ with col1:
                 ),
                 height=400,
                 paper_bgcolor='white',
-                plot_bgcolor='white'
+                plot_bgcolor='white',
+                font=dict(color='#2C3E50'),
+                legend=dict(
+                    bgcolor='rgba(255,255,255,0.9)',
+                    bordercolor='#2C3E50',
+                    borderwidth=1,
+                    font=dict(color='#2C3E50')
+                )
             )
             
             st.plotly_chart(fig_radar, use_container_width=True)
@@ -221,7 +224,7 @@ with col1:
 
 with col2:
     # VISUALIZACIÓN 2: TOP ACORDES - RANKING
-    st.subheader("🏆 Ranking de Acordes")
+    st.subheader("Ranking de Acordes")
     
     # Preparar datos para ranking
     ranking_data = []
@@ -240,6 +243,7 @@ with col2:
         use_container_width=True,
         hide_index=True
     )
+
 # SEGUNDA FILA DE VISUALIZACIONES
 st.markdown("---")
 
@@ -247,7 +251,7 @@ col3, col4 = st.columns([1, 1])
 
 with col3:
     # VISUALIZACIÓN 3: DISTRIBUCIÓN DE INTENSIDADES
-    st.subheader("📊 Distribución de Intensidades")
+    st.subheader("Distribución de Intensidades")
     
     if selected_accords:
         # Crear subplots para histogramas
@@ -255,7 +259,7 @@ with col3:
             rows=len(selected_accords),
             cols=1,
             subplot_titles=[acc.title() for acc in selected_accords],
-            vertical_spacing=0.08
+            vertical_spacing=0.1
         )
         
         for i, accord in enumerate(selected_accords):
@@ -266,7 +270,7 @@ with col3:
                 
                 if len(non_zero_values) > 0:
                     # Calcular bins
-                    bins = np.linspace(non_zero_values.min(), non_zero_values.max(), 20)
+                    bins = np.linspace(non_zero_values.min(), non_zero_values.max(), 15)
                     hist, bin_edges = np.histogram(non_zero_values, bins=bins)
                     
                     fig_hist.add_trace(
@@ -275,46 +279,46 @@ with col3:
                             y=hist,
                             name=accord.title(),
                             marker_color=PRIMARY_PALETTE[i % len(PRIMARY_PALETTE)],
-                            opacity=0.7,
+                            opacity=0.8,
                             showlegend=False
                         ),
                         row=i+1, col=1
                     )
         
         fig_hist.update_layout(
-                height=180 * len(selected_accords),
-                title_text="Distribución de Intensidades por Acorde",
-                showlegend=False,
-                paper_bgcolor='white',
-                plot_bgcolor='white',
-                font=dict(color='#2C3E50'),
-                annotations=[  # ← AGREGAR ESTAS LÍNEAS
-                    dict(text=acc.title(), x=0.5, y=1-(i*0.95/len(selected_accords)), 
-                         xref="paper", yref="paper", xanchor="center", yanchor="top",
-                         font=dict(size=12, color='#2C3E50'), showarrow=False)
-                    for i, acc in enumerate(selected_accords)
-                ]
-            )
+            height=180 * len(selected_accords),
+            title=dict(
+                text="Distribución de Intensidades por Acorde",
+                font=dict(size=16, color='#2C3E50'),
+                x=0.5
+            ),
+            showlegend=False,
+            paper_bgcolor='white',
+            plot_bgcolor='white',
+            font=dict(color='#2C3E50')
+        )
         
         fig_hist.update_xaxes(
             title_text="Intensidad (%)",
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
-            tickfont=dict(color='#2C3E50')
+            tickfont=dict(color='#2C3E50'),
+            titlefont=dict(color='#2C3E50')
         )
         fig_hist.update_yaxes(
             title_text="Frecuencia",
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
-            tickfont=dict(color='#2C3E50') 
+            tickfont=dict(color='#2C3E50'),
+            titlefont=dict(color='#2C3E50')
         )
-                
+        
         st.plotly_chart(fig_hist, use_container_width=True)
         download_plot_button(fig_hist, "distribuciones_intensidad")
 
 with col4:
     # VISUALIZACIÓN 4: HEATMAP DE CORRELACIONES
-    st.subheader("🔥 Correlaciones entre Acordes")
+    st.subheader("Correlaciones entre Acordes")
     
     # Seleccionar top acordes para correlación
     top_accord_names = [acc[0] for acc in top_accords[:8]]  # Top 8 para visualización clara
@@ -326,42 +330,49 @@ with col4:
         x=[col.replace('accords.', '').title() for col in correlation_matrix.columns],
         y=[col.replace('accords.', '').title() for col in correlation_matrix.index],
         colorscale=[
-            [0, CORRELATION_PALETTE[0]],    # Rojo oscuro
-            [0.25, CORRELATION_PALETTE[1]], # Rojo claro  
-            [0.5, CORRELATION_PALETTE[2]],  # Crema (neutro)
-            [0.75, CORRELATION_PALETTE[3]], # Verde claro
-            [1, CORRELATION_PALETTE[4]]     # Verde oscuro
+            [0, CORRELATION_PALETTE[0]],
+            [0.25, CORRELATION_PALETTE[1]], 
+            [0.5, CORRELATION_PALETTE[2]],
+            [0.75, CORRELATION_PALETTE[3]],
+            [1, CORRELATION_PALETTE[4]]
         ],
         zmid=0,
         colorbar=dict(
             title="Correlación",
+            titlefont=dict(color='#2C3E50'),
+            tickfont=dict(color='#2C3E50'),
             tickmode="linear",
             tick0=-1,
             dtick=0.5
         ),
         text=correlation_matrix.round(2).values,
         texttemplate="%{text}",
-        textfont={"size": 10},
+        textfont={"size": 11, "color": "#FFFFFF"},
         hoverongaps=False
     ))
     
     fig_corr.update_layout(
-       title=dict(
-        text="Correlaciones entre Acordes Principales",
-        font=dict(size=14, color='#2C3E50')
-    ),
-    xaxis=dict(
-        side="bottom", 
-        tickangle=45,
-        tickfont=dict(color='#2C3E50', size=10), 
-        linecolor='#BDC3C7'
-    ),
-    yaxis=dict(
-        side="left",
-        tickfont=dict(color='#2C3E50', size=10), 
-        linecolor='#BDC3C7'
+        title=dict(
+            text="Correlaciones entre Acordes Principales",
+            font=dict(size=14, color='#2C3E50')
+        ),
+        xaxis=dict(
+            side="bottom", 
+            tickangle=45,
+            tickfont=dict(color='#2C3E50', size=10), 
+            linecolor='#BDC3C7'
+        ),
+        yaxis=dict(
+            side="left",
+            tickfont=dict(color='#2C3E50', size=10), 
+            linecolor='#BDC3C7'
+        ),
+        height=400,
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50')
     )
-    )
+    
     st.plotly_chart(fig_corr, use_container_width=True)
     download_plot_button(fig_corr, "correlaciones_acordes")
 
@@ -394,3 +405,16 @@ with insight_cols[2]:
         f"{total_combinations}",
         "De 74 posibles"
     )
+
+# Información técnica
+with st.expander("Información Técnica"):
+    st.markdown("""
+    **Metodología de Análisis:**
+    - **Acordes**: Intensidades expresadas como porcentajes (0-100%)
+    - **Frecuencia**: Número de perfumes que contienen cada acorde
+    - **Correlaciones**: Coeficiente de Pearson entre intensidades de acordes
+    - **Filtros**: Aplicados dinámicamente según selección del usuario
+    - **Dataset**: 521 perfumes con información completa
+    
+    **Paleta de Colores**: Diseño profesional con alta legibilidad
+    """)

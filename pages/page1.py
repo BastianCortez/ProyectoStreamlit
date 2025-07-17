@@ -85,16 +85,25 @@ def create_rating_distribution():
 def create_rating_vs_reviews_scatter():
     """Crea scatter plot de rating vs número de reviews"""
     df = load_and_process_data()
+    # Validar que las columnas existen
+    required_cols = ['name', 'brand', 'calificationNumbers.ratingValue', 'calificationNumbers.ratingCount']
+    for col in required_cols:
+        if col not in df.columns:
+            st.warning(f"La columna '{col}' no existe en el dataset. No se puede mostrar el gráfico de dispersión.")
+            return None
+    # Eliminar filas con valores nulos en las columnas requeridas
+    df = df.dropna(subset=required_cols)
+    if df.empty:
+        st.warning("No hay datos suficientes para mostrar el gráfico de dispersión.")
+        return None
     fig = px.scatter(
         df,
         x='calificationNumbers.ratingCount',
         y='calificationNumbers.ratingValue',
-        # color='gender',  # Elimina si no existe la columna gender
         size='calificationNumbers.ratingValue',
         hover_data=['name', 'brand'],
         title='Relación entre Popularidad y Calificación',
         labels={'calificationNumbers.ratingCount': 'Número de Reviews', 'calificationNumbers.ratingValue': 'Calificación'}
-        # color_discrete_map=GENDER_PALETTE  # Elimina si no existe gender
     )
     fig.update_layout(
         height=500,

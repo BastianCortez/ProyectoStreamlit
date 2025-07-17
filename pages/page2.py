@@ -1,305 +1,400 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import io
+from plotly.subplots import make_subplots
+import numpy as np
+from Utils.data_loader import load_data
+from Utils.plotting import RATING_PALETTE, PERFORMANCE_PALETTE, GENDER_PALETTE
+import plotly.io as pio
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Dashboard Interactivo",
-    page_icon="📊",
+    page_title="Calificaciones y Performance",
+    page_icon="⭐",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Función para generar datos de ejemplo
+# Paletas de colores personalizadas para esta página
+RATING_PALETTE = [
+    '#FFD700',  # Dorado (excelente)
+    '#FF6B35',  # Naranja rojizo (muy bueno)
+    '#F7931E',  # Naranja (bueno)
+    '#FFB84D',  # Naranja claro (regular)
+    '#8B4513',  # Marrón (malo)
+]
+
+PERFORMANCE_PALETTE = [
+    '#2E8B57',  # Verde bosque (longevidad)
+    '#4682B4',  # Azul acero (proyección)
+    '#9370DB',  # Violeta (durabilidad)
+    '#DC143C',  # Rojo carmesí (intensidad)
+    '#FF8C00',  # Naranja oscuro (calidad)
+]
+
+GENDER_PALETTE = {
+    'femenino': '#FF69B4',      # Rosa intenso
+    'masculino': '#4169E1',     # Azul real
+    'unisex': '#32CD32',        # Verde lima
+    'unisex_femenino': '#FF1493', # Rosa profundo
+    'unisex_masculino': '#1E90FF' # Azul dodger
+}
+
 @st.cache_data
-def load_sample_data():
-    """Genera datos de ejemplo para el dashboard"""
-    np.random.seed(42)
+def load_and_process_data():
+    """Carga y procesa los datos para análisis de calificaciones"""
+    df = load_data()
     
-    # Datos de ventas
-    dates = pd.date_range(start='2023-01-01', end='2024-12-31', freq='D')
-    sales_data = pd.DataFrame({
-        'fecha': dates,
-        'ventas': np.random.normal(1000, 200, len(dates)) + np.sin(np.arange(len(dates)) * 2 * np.pi / 365) * 100,
-        'region': np.random.choice(['Norte', 'Sur', 'Centro', 'Oriente'], len(dates)),
-        'producto': np.random.choice(['Producto A', 'Producto B', 'Producto C', 'Producto D'], len(dates)),
-        'categoria': np.random.choice(['Electrónicos', 'Ropa', 'Hogar', 'Deportes'], len(dates))
-    })
+    # Limpieza de datos para ratings
+    df_clean = df.dropna(subset=['rating']).copy()
+    df_clean['rating_category'] = pd.cut(df_clean['rating'], 
+                                       bins=[0, 2, 3, 4, 4.5, 5], 
+                                       labels=['Malo', 'Regular', 'Bueno', 'Muy Bueno', 'Excelente'])
     
-    # Datos de empleados
-    employees_data = pd.DataFrame({
-        'nombre': [f'Empleado {i}' for i in range(1, 101)],
-        'departamento': np.random.choice(['Ventas', 'Marketing', 'IT', 'RRHH', 'Finanzas'], 100),
-        'salario': np.random.normal(50000, 15000, 100),
-        'experiencia': np.random.randint(1, 15, 100),
-        'satisfaccion': np.random.randint(1, 11, 100),
-        'edad': np.random.randint(22, 65, 100)
-    })
+    # Procesamiento de reviews
+    df_clean['review_category'] = pd.cut(df_clean['ratingCount'], 
+                                       bins=[0, 10, 50, 200, 1000, float('inf')], 
+                                       labels=['Nuevo', 'Poco Conocido', 'Conocido', 'Popular', 'Muy Popular'])
     
-    return sales_data, employees_data
+    return df_clean
 
-# Función para descargar datos
-def download_data(df, filename):
-    """Permite descargar datos en formato CSV"""
-    csv = df.to_csv(index=False)
-    st.download_button(
-        label="📥 Descargar CSV",
-        data=csv,
-        file_name=filename,
-        mime="text/csv"
+def create_rating_distribution():
+    """Crea histograma de distribución de ratings"""
+    df = load_and_process_data()
+    
+    fig = px.histogram(
+        df, 
+        x='rating', 
+        nbins=20,
+        title='Distribución de Calificaciones de Perfumes',
+        labels={'rating': 'Calificación', 'count': 'Cantidad de Perfumes'},
+        color_discrete_sequence=[RATING_PALETTE[2]]
     )
-
-# Función para crear visualizaciones con opción de descarga
-def create_downloadable_plot(fig, filename):
-    """Crea un plot con opción de descarga"""
-    st.plotly_chart(fig, use_container_width=True)
     
-    # Botón de descarga para la imagen
-    img_bytes = fig.to_image(format="png")
-    st.download_button(
-        label="📥 Descargar Gráfico",
-        data=img_bytes,
-        file_name=filename,
-        mime="image/png"
+    # Añadir línea de promedio
+    mean_rating = df['rating'].mean()
+    fig.add_vline(x=mean_rating, line_dash="dash", line_color="red", 
+                  annotation_text=f"Promedio: {mean_rating:.2f}")
+    
+    fig.update_layout(
+        showlegend=False,
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
     )
+    
+    return fig
 
+def create_rating_vs_reviews_scatter():
+    """Crea scatter plot de rating vs número de reviews"""
+    df = load_and_process_data()
+    
+    fig = px.scatter(
+        df,
+        x='ratingCount',
+        y='rating',
+        color='gender',
+        size='rating',
+        hover_data=['name', 'brand'],
+        title='Relación entre Popularidad y Calificación',
+        labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
+        color_discrete_map=GENDER_PALETTE
+    )
+    
+    fig.update_layout(
+        height=500,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+def create_rating_by_gender_boxplot():
+    """Crea box plot de ratings por género"""
+    df = load_and_process_data()
+    
+    fig = px.box(
+        df,
+        x='gender',
+        y='rating',
+        title='Distribución de Calificaciones por Género',
+        labels={'gender': 'Género', 'rating': 'Calificación'},
+        color='gender',
+        color_discrete_map=GENDER_PALETTE
+    )
+    
+    fig.update_layout(
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+def create_performance_radar():
+    """Crea radar chart de características de performance"""
+    df = load_and_process_data()
+    
+    # Calcular promedios por género
+    performance_cols = ['longevity', 'sillage', 'projection']
+    available_cols = [col for col in performance_cols if col in df.columns]
+    
+    if not available_cols:
+        st.warning("No hay datos de performance disponibles en el dataset")
+        return None
+    
+    gender_performance = df.groupby('gender')[available_cols].mean()
+    
+    fig = go.Figure()
+    
+    for i, gender in enumerate(gender_performance.index):
+        fig.add_trace(go.Scatterpolar(
+            r=gender_performance.loc[gender].values,
+            theta=available_cols,
+            fill='toself',
+            name=gender.title(),
+            line_color=GENDER_PALETTE.get(gender, PERFORMANCE_PALETTE[i])
+        ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 5]
+            )),
+        showlegend=True,
+        title="Performance Promedio por Género",
+        height=500
+    )
+    
+    return fig
+
+def create_top_rated_perfumes():
+    """Crea tabla de perfumes mejor calificados"""
+    df = load_and_process_data()
+    
+    # Filtrar perfumes con al menos 10 reviews
+    df_filtered = df[df['ratingCount'] >= 10]
+    top_perfumes = df_filtered.nlargest(20, 'rating')[['name', 'brand', 'rating', 'ratingCount', 'gender']]
+    
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=['Perfume', 'Marca', 'Calificación', 'Reviews', 'Género'],
+            fill_color=RATING_PALETTE[0],
+            align='left',
+            font=dict(color='white', size=12)
+        ),
+        cells=dict(
+            values=[top_perfumes['name'], 
+                   top_perfumes['brand'],
+                   top_perfumes['rating'].round(2),
+                   top_perfumes['ratingCount'],
+                   top_perfumes['gender']],
+            fill_color='lavender',
+            align='left',
+            font=dict(color='black', size=11)
+        )
+    )])
+    
+    fig.update_layout(
+        title="Top 20 Perfumes Mejor Calificados (mín. 10 reviews)",
+        height=600
+    )
+    
+    return fig
+
+def create_rating_trends():
+    """Crea análisis de tendencias de rating"""
+    df = load_and_process_data()
+    
+    # Crear bins de popularidad
+    df['popularity_tier'] = pd.cut(df['ratingCount'], 
+                                 bins=[0, 10, 50, 200, float('inf')], 
+                                 labels=['Nicho', 'Emergente', 'Establecido', 'Mainstream'])
+    
+    rating_by_popularity = df.groupby('popularity_tier')['rating'].agg(['mean', 'count']).reset_index()
+    
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=('Rating Promedio por Popularidad', 'Cantidad de Perfumes por Categoría'),
+        specs=[[{"secondary_y": False}, {"secondary_y": False}]]
+    )
+    
+    # Gráfico de barras para rating promedio
+    fig.add_trace(
+        go.Bar(
+            x=rating_by_popularity['popularity_tier'],
+            y=rating_by_popularity['mean'],
+            name='Rating Promedio',
+            marker_color=RATING_PALETTE[1]
+        ),
+        row=1, col=1
+    )
+    
+    # Gráfico de barras para cantidad
+    fig.add_trace(
+        go.Bar(
+            x=rating_by_popularity['popularity_tier'],
+            y=rating_by_popularity['count'],
+            name='Cantidad',
+            marker_color=RATING_PALETTE[3]
+        ),
+        row=1, col=2
+    )
+    
+    fig.update_layout(
+        height=400,
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+def create_brand_performance():
+    """Crea análisis de performance por marca"""
+    df = load_and_process_data()
+    
+    # Top 15 marcas por cantidad de perfumes
+    top_brands = df['brand'].value_counts().head(15).index
+    df_brands = df[df['brand'].isin(top_brands)]
+    
+    brand_stats = df_brands.groupby('brand').agg({
+        'rating': ['mean', 'count'],
+        'ratingCount': 'sum'
+    }).round(2)
+    
+    brand_stats.columns = ['rating_promedio', 'cantidad_perfumes', 'total_reviews']
+    brand_stats = brand_stats.sort_values('rating_promedio', ascending=True)
+    
+    fig = px.bar(
+        brand_stats.reset_index(),
+        x='rating_promedio',
+        y='brand',
+        orientation='h',
+        title='Rating Promedio por Marca (Top 15)',
+        labels={'rating_promedio': 'Rating Promedio', 'brand': 'Marca'},
+        color='rating_promedio',
+        color_continuous_scale=RATING_PALETTE
+    )
+    
+    fig.update_layout(
+        height=600,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
+# Interfaz principal
 def main():
-    # Sidebar para navegación
-    st.sidebar.title("🎯 Navegación")
-    page = st.sidebar.selectbox(
-        "Selecciona una página:",
-        ["📊 Dashboard Principal", "💼 Análisis de Empleados", "📈 Análisis de Ventas"]
-    )
-    
-    # Cargar datos
-    sales_data, employees_data = load_sample_data()
-    
-    if page == "📊 Dashboard Principal":
-        show_dashboard_principal(sales_data, employees_data)
-    elif page == "💼 Análisis de Empleados":
-        show_employee_analysis(employees_data)
-    elif page == "📈 Análisis de Ventas":
-        show_sales_analysis(sales_data)
-
-def show_dashboard_principal(sales_data, employees_data):
-    """Página principal del dashboard"""
-    st.title("📊 Dashboard Principal")
+    st.title("⭐ Análisis de Calificaciones y Performance")
     st.markdown("---")
     
-    # Métricas generales
+    # Sidebar con filtros
+    st.sidebar.header("Filtros de Análisis")
+    
+    df = load_and_process_data()
+    
+    # Filtros
+    min_rating = st.sidebar.slider("Rating Mínimo", 0.0, 5.0, 0.0, 0.1)
+    min_reviews = st.sidebar.slider("Mínimo de Reviews", 0, 1000, 0, 10)
+    selected_genders = st.sidebar.multiselect(
+        "Géneros a Analizar",
+        df['gender'].unique(),
+        default=df['gender'].unique()
+    )
+    
+    # Aplicar filtros
+    df_filtered = df[
+        (df['rating'] >= min_rating) & 
+        (df['ratingCount'] >= min_reviews) & 
+        (df['gender'].isin(selected_genders))
+    ]
+    
+    # Métricas principales
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        total_sales = sales_data['ventas'].sum()
-        st.metric("💰 Ventas Totales", f"${total_sales:,.0f}")
+        st.metric("Perfumes Analizados", len(df_filtered))
     
     with col2:
-        avg_salary = employees_data['salario'].mean()
-        st.metric("💼 Salario Promedio", f"${avg_salary:,.0f}")
+        st.metric("Rating Promedio", f"{df_filtered['rating'].mean():.2f}")
     
     with col3:
-        total_employees = len(employees_data)
-        st.metric("👥 Total Empleados", total_employees)
+        st.metric("Total de Reviews", f"{df_filtered['ratingCount'].sum():,}")
     
     with col4:
-        avg_satisfaction = employees_data['satisfaccion'].mean()
-        st.metric("😊 Satisfacción Promedio", f"{avg_satisfaction:.1f}/10")
+        st.metric("Mejor Calificado", f"{df_filtered['rating'].max():.2f}")
     
     st.markdown("---")
     
-    # Gráfico de resumen - Scatter plot
-    st.subheader("🔍 Análisis de Correlación: Experiencia vs Salario")
-    
-    # Widget interactivo - selectbox
-    selected_dept = st.selectbox(
-        "Selecciona un departamento:",
-        ["Todos"] + list(employees_data['departamento'].unique())
-    )
-    
-    # Filtrar datos según selección
-    if selected_dept != "Todos":
-        filtered_data = employees_data[employees_data['departamento'] == selected_dept]
-    else:
-        filtered_data = employees_data
-    
-    # Crear scatter plot
-    fig_scatter = px.scatter(
-        filtered_data,
-        x='experiencia',
-        y='salario',
-        color='departamento',
-        size='satisfaccion',
-        hover_data=['nombre', 'edad'],
-        title=f'Relación Experiencia-Salario {f"({selected_dept})" if selected_dept != "Todos" else ""}',
-        labels={'experiencia': 'Años de Experiencia', 'salario': 'Salario (USD)'}
-    )
-    fig_scatter.update_layout(height=500)
-    
-    create_downloadable_plot(fig_scatter, "scatter_experiencia_salario.png")
-    
-    # Tabla con datos filtrados
-    st.subheader("📋 Datos Detallados")
-    st.dataframe(filtered_data.head(10))
-    download_data(filtered_data, "empleados_filtrados.csv")
-
-def show_employee_analysis(employees_data):
-    """Página de análisis de empleados"""
-    st.title("💼 Análisis de Empleados")
-    st.markdown("---")
-    
-    # Widgets interactivos
+    # Fila 1: Distribución y Scatter Plot
     col1, col2 = st.columns(2)
     
     with col1:
-        # Widget slider para filtrar por experiencia
-        min_exp, max_exp = st.slider(
-            "Rango de experiencia (años):",
-            min_value=int(employees_data['experiencia'].min()),
-            max_value=int(employees_data['experiencia'].max()),
-            value=(1, 15)
-        )
+        st.plotly_chart(create_rating_distribution(), use_container_width=True)
     
     with col2:
-        # Widget multiselect para departamentos
-        selected_depts = st.multiselect(
-            "Selecciona departamentos:",
-            employees_data['departamento'].unique(),
-            default=employees_data['departamento'].unique()
-        )
+        st.plotly_chart(create_rating_vs_reviews_scatter(), use_container_width=True)
     
-    # Filtrar datos
-    filtered_employees = employees_data[
-        (employees_data['experiencia'] >= min_exp) & 
-        (employees_data['experiencia'] <= max_exp) &
-        (employees_data['departamento'].isin(selected_depts))
-    ]
-    
-    # Visualización 1: Histograma de salarios
-    st.subheader("📊 Distribución de Salarios")
-    fig_hist = px.histogram(
-        filtered_employees,
-        x='salario',
-        nbins=20,
-        color='departamento',
-        title='Distribución de Salarios por Departamento',
-        labels={'salario': 'Salario (USD)', 'count': 'Cantidad de Empleados'}
-    )
-    create_downloadable_plot(fig_hist, "histograma_salarios.png")
-    
-    # Visualización 2: Box plot de satisfacción
-    st.subheader("📦 Niveles de Satisfacción por Departamento")
-    fig_box = px.box(
-        filtered_employees,
-        x='departamento',
-        y='satisfaccion',
-        title='Distribución de Satisfacción Laboral',
-        labels={'satisfaccion': 'Nivel de Satisfacción (1-10)', 'departamento': 'Departamento'}
-    )
-    create_downloadable_plot(fig_box, "boxplot_satisfaccion.png")
-    
-    # Tabla resumen
-    st.subheader("📈 Estadísticas Resumidas")
-    summary_stats = filtered_employees.groupby('departamento').agg({
-        'salario': ['mean', 'median', 'std'],
-        'experiencia': 'mean',
-        'satisfaccion': 'mean',
-        'edad': 'mean'
-    }).round(2)
-    
-    st.dataframe(summary_stats)
-    download_data(summary_stats, "estadisticas_empleados.csv")
-
-def show_sales_analysis(sales_data):
-    """Página de análisis de ventas"""
-    st.title("📈 Análisis de Ventas")
-    st.markdown("---")
-    
-    # Widgets interactivos
-    col1, col2, col3 = st.columns(3)
+    # Fila 2: Box Plot y Radar Chart
+    col1, col2 = st.columns(2)
     
     with col1:
-        # Widget selectbox para región
-        selected_region = st.selectbox(
-            "Selecciona región:",
-            ["Todas"] + list(sales_data['region'].unique())
-        )
+        st.plotly_chart(create_rating_by_gender_boxplot(), use_container_width=True)
     
     with col2:
-        # Widget multiselect para productos
-        selected_products = st.multiselect(
-            "Selecciona productos:",
-            sales_data['producto'].unique(),
-            default=sales_data['producto'].unique()
+        radar_fig = create_performance_radar()
+        if radar_fig:
+            st.plotly_chart(radar_fig, use_container_width=True)
+        else:
+            st.info("Radar chart de performance no disponible - datos faltantes")
+    
+    # Fila 3: Tendencias de Rating
+    st.plotly_chart(create_rating_trends(), use_container_width=True)
+    
+    # Fila 4: Performance por Marca
+    st.plotly_chart(create_brand_performance(), use_container_width=True)
+    
+    # Fila 5: Top Perfumes
+    st.plotly_chart(create_top_rated_perfumes(), use_container_width=True)
+    
+    # Botón de descarga
+    st.markdown("---")
+    if st.button("Descargar Análisis de Calificaciones"):
+        # Crear HTML con todos los gráficos
+        html_content = f"""
+        <html>
+        <head>
+            <title>Análisis de Calificaciones - Dashboard de Perfumes</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; }}
+                .chart {{ margin: 20px 0; }}
+                h1 {{ color: #8B4513; }}
+            </style>
+        </head>
+        <body>
+            <h1>Análisis de Calificaciones y Performance</h1>
+            <p>Perfumes analizados: {len(df_filtered)}</p>
+            <p>Rating promedio: {df_filtered['rating'].mean():.2f}</p>
+            <div class="chart">{create_rating_distribution().to_html()}</div>
+            <div class="chart">{create_rating_vs_reviews_scatter().to_html()}</div>
+            <div class="chart">{create_rating_by_gender_boxplot().to_html()}</div>
+            <div class="chart">{create_rating_trends().to_html()}</div>
+            <div class="chart">{create_brand_performance().to_html()}</div>
+            <div class="chart">{create_top_rated_perfumes().to_html()}</div>
+        </body>
+        </html>
+        """
+        
+        st.download_button(
+            label="Descargar Reporte HTML",
+            data=html_content,
+            file_name="analisis_calificaciones.html",
+            mime="text/html"
         )
-    
-    with col3:
-        # Widget date input para rango de fechas
-        date_range = st.date_input(
-            "Rango de fechas:",
-            value=(sales_data['fecha'].min(), sales_data['fecha'].max()),
-            min_value=sales_data['fecha'].min(),
-            max_value=sales_data['fecha'].max()
-        )
-    
-    # Filtrar datos
-    filtered_sales = sales_data[
-        (sales_data['producto'].isin(selected_products)) &
-        (sales_data['fecha'] >= pd.to_datetime(date_range[0])) &
-        (sales_data['fecha'] <= pd.to_datetime(date_range[1]))
-    ]
-    
-    if selected_region != "Todas":
-        filtered_sales = filtered_sales[filtered_sales['region'] == selected_region]
-    
-    # Visualización 1: Gráfico de líneas temporal
-    st.subheader("📊 Evolución de Ventas en el Tiempo")
-    daily_sales = filtered_sales.groupby('fecha')['ventas'].sum().reset_index()
-    
-    fig_line = px.line(
-        daily_sales,
-        x='fecha',
-        y='ventas',
-        title='Evolución Diaria de Ventas',
-        labels={'fecha': 'Fecha', 'ventas': 'Ventas (USD)'}
-    )
-    create_downloadable_plot(fig_line, "linea_ventas_tiempo.png")
-    
-    # Visualización 2: Gráfico de barras por categoría
-    st.subheader("📊 Ventas por Categoría")
-    category_sales = filtered_sales.groupby('categoria')['ventas'].sum().reset_index()
-    
-    fig_bar = px.bar(
-        category_sales,
-        x='categoria',
-        y='ventas',
-        title='Ventas Totales por Categoría',
-        labels={'categoria': 'Categoría', 'ventas': 'Ventas (USD)'},
-        color='ventas',
-        color_continuous_scale='viridis'
-    )
-    create_downloadable_plot(fig_bar, "barras_ventas_categoria.png")
-    
-    # Visualización 3: Heatmap de ventas por región y producto
-    st.subheader("🔥 Mapa de Calor: Ventas por Región y Producto")
-    heatmap_data = filtered_sales.groupby(['region', 'producto'])['ventas'].sum().reset_index()
-    heatmap_pivot = heatmap_data.pivot(index='region', columns='producto', values='ventas')
-    
-    fig_heatmap = px.imshow(
-        heatmap_pivot,
-        title='Ventas por Región y Producto',
-        labels={'x': 'Producto', 'y': 'Región', 'color': 'Ventas (USD)'},
-        color_continuous_scale='RdYlBu_r'
-    )
-    create_downloadable_plot(fig_heatmap, "heatmap_ventas.png")
-    
-    # Tabla de datos filtrados
-    st.subheader("📋 Datos de Ventas Filtrados")
-    st.dataframe(filtered_sales.head(20))
-    download_data(filtered_sales, "ventas_filtradas.csv")
 
 if __name__ == "__main__":
     main()

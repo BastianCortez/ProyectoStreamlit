@@ -50,10 +50,10 @@ df = load_data()
 
 # PALETAS PROFESIONALES
 PRIMARY_PALETTE = [
-    '#2C3E50',  # Azul oscuro profesional
-    '#34495E',  # Gris azulado
-    '#3498DB',  # Azul claro
-    '#2980B9',  # Azul medio
+    "#6394C5",  # Azul oscuro profesional
+    "#334C64",  # Gris azulado
+    "#2794DD",  # Azul claro
+    "#156CA7",  # Azul medio
     '#1ABC9C',  # Verde agua
     '#16A085',  # Verde agua oscuro
     '#27AE60',  # Verde
@@ -61,7 +61,6 @@ PRIMARY_PALETTE = [
     '#F39C12',  # Naranja
     '#E67E22'   # Naranja oscuro
 ]
-
 # Paleta de correlaciones
 CORRELATION_PALETTE = ['#E74C3C', '#EC7063', '#F8F9FA', '#82E0AA', '#27AE60']
 
@@ -402,16 +401,3 @@ with insight_cols[2]:
         f"{total_combinations}",
         "De 74 posibles"
     )
-
-# Información técnica
-with st.expander("Información Técnica"):
-    st.markdown("""
-    **Metodología de Análisis:**
-    - **Acordes**: Intensidades expresadas como porcentajes (0-100%)
-    - **Frecuencia**: Número de perfumes que contienen cada acorde
-    - **Correlaciones**: Coeficiente de Pearson entre intensidades de acordes
-    - **Filtros**: Aplicados dinámicamente según selección del usuario
-    - **Dataset**: 521 perfumes con información completa
-    
-    **Paleta de Colores**: Diseño profesional con alta legibilidad
-    """)

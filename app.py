@@ -295,7 +295,7 @@ with insight_cols[2]:
 
 # Gráfico de resumen en la página principal
 st.markdown("---")
-st.markdown('<h2 class="section-title">Vista General: Top 10 Acordes</h2>', unsafe_allow_html=True)
+st.markdown('<h2 class="section-title">Vista General: Top 5 Acordes</h2>', unsafe_allow_html=True)
 
 # Crear gráfico de barras de top acordes
 top_10_data = []

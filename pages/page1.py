@@ -4,8 +4,8 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import seaborn as sns
-import matplotlib.pyplot as plt
+
+
 
 # Importar funciones propias (con manejo de errores)
 try:

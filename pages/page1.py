@@ -1,5 +1,6 @@
 import streamlit as st
 from utils import cargar_datos
+import plotly.express as px
 
 
 st.header("Visualización general del Dataset de Perfumes")

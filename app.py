@@ -24,20 +24,20 @@ st.write(df.describe(include="all"))
 
 st.sidebar.header("Filtros")
 
-marcas = st.sidebar.multiselect("Selecciona una o más marcas", df["Marca"].unique(), default=df["Marca"].unique())
-generos = st.sidebar.multiselect("Selecciona género", df["Género"].unique(), default=df["Género"].unique())
-concentraciones = st.sidebar.multiselect("Concentración", df["Concentración"].unique(), default=df["Concentración"].unique())
+nombres = st.sidebar.multiselect(
+    "Selecciona uno o más perfumes",
+    df["name"].unique(),
+    default=df["name"].unique()
+)
 
-precio_min, precio_max = int(df["Precio"].min()), int(df["Precio"].max())
-rango_precio = st.sidebar.slider("Rango de precio", precio_min, precio_max, (precio_min, precio_max))
+rating_min, rating_max = float(df["calificationNumbers.ratingValue"].min()), float(df["calificationNumbers.ratingValue"].max())
+rango_rating = st.sidebar.slider("Rango de calificación", rating_min, rating_max, (rating_min, rating_max))
 
-# Aplicar filtros
+# Aplicar filtros solo con columnas existentes
 df_filtrado = df[
-    (df["Marca"].isin(marcas)) &
-    (df["Género"].isin(generos)) &
-    (df["Concentración"].isin(concentraciones)) &
-    (df["Precio"] >= rango_precio[0]) &
-    (df["Precio"] <= rango_precio[1])
+    (df["name"].isin(nombres)) &
+    (df["calificationNumbers.ratingValue"] >= rango_rating[0]) &
+    (df["calificationNumbers.ratingValue"] <= rango_rating[1])
 ]
 
 st.subheader("Tabla de perfumes filtrados")
@@ -45,20 +45,19 @@ st.dataframe(df_filtrado, use_container_width=True)
 
 # ------------------ VISUALIZACIONES ------------------ #
 
-st.subheader("Cantidad de perfumes por marca")
-conteo_marcas = df_filtrado["Marca"].value_counts().reset_index()
-conteo_marcas.columns = ["Marca", "Cantidad"]
-fig1 = px.bar(conteo_marcas, x="Marca", y="Cantidad", color="Marca", title="Perfumes por Marca")
+
+# Visualización: cantidad de perfumes por calificación
+st.subheader("Cantidad de perfumes por calificación")
+conteo_rating = df_filtrado["calificationNumbers.ratingValue"].value_counts().reset_index()
+conteo_rating.columns = ["Calificación", "Cantidad"]
+fig1 = px.bar(conteo_rating, x="Calificación", y="Cantidad", color="Calificación", title="Perfumes por Calificación")
 st.plotly_chart(fig1, use_container_width=True)
 
-st.subheader("Precio promedio por marca")
-precio_promedio = df_filtrado.groupby("Marca")["Precio"].mean().reset_index()
-fig2 = px.line(precio_promedio, x="Marca", y="Precio", title="Precio promedio por Marca", markers=True)
-st.plotly_chart(fig2, use_container_width=True)
-
-st.subheader("Distribución de precios por género")
-fig3 = px.box(df_filtrado, x="Género", y="Precio", color="Género", title="Distribución de precios por género")
-st.plotly_chart(fig3, use_container_width=True)
+# Visualización: cantidad de perfumes por calificación
+conteo_rating = df_filtrado["calificationNumbers.ratingValue"].value_counts().reset_index()
+conteo_rating.columns = ["Calificación", "Cantidad"]
+fig4 = px.bar(conteo_rating, x="Calificación", y="Cantidad", color="Calificación", title="Perfumes por Calificación")
+st.plotly_chart(fig4, use_container_width=True)
 
 # ------------------ DESCARGA ------------------ #
 

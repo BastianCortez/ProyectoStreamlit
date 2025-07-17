@@ -2,46 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from Utils.data_loader import load_perfume_data, get_accord_stats
 
-# Importar funciones propias (con manejo de errores para diferentes estructuras)
-try:
-    from Utils.data_loader import load_perfume_data, get_accord_stats
-except ImportError:
-    try:
-        from utils.data_loader import load_perfume_data, get_accord_stats
-    except ImportError:
-        # Fallback: definir funciones básicas aquí
-        @st.cache_data
-        def load_perfume_data():
-            try:
-                df = pd.read_csv('data/perfumes_ordenado.csv')
-                accord_columns = [col for col in df.columns if col.startswith('accords.')]
-                df[accord_columns] = df[accord_columns].fillna(0)
-                return df
-            except Exception as e:
-                st.error(f"Error al cargar datos: {e}")
-                return pd.DataFrame()
-        
-        def get_accord_stats(df):
-            accord_columns = [col for col in df.columns if col.startswith('accords.')]
-            stats = {}
-            
-            for col in accord_columns:
-                values = df[col].dropna()
-                non_zero_values = values[values > 0]
-                
-                if len(non_zero_values) > 0:
-                    stats[col] = {
-                        'frequency': len(non_zero_values),
-                        'mean_intensity': non_zero_values.mean(),
-                        'median_intensity': non_zero_values.median(),
-                        'max_intensity': non_zero_values.max(),
-                        'min_intensity': non_zero_values.min(),
-                        'std_intensity': non_zero_values.std(),
-                        'perfume_percentage': (len(non_zero_values) / len(df)) * 100
-                    }
-            
-            return stats
 
 # Configuración de página principal
 st.set_page_config(

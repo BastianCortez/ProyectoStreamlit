@@ -6,7 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import io
+from utils import cargar_datos
 
+# Configuración de la página
 st.header("Visualización general del Dataset de Perfumes")
 
 df = cargar_datos()

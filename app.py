@@ -348,7 +348,7 @@ for accord, stats in top_accords[:10]:
 top_10_df = pd.DataFrame(top_10_data)
 
 # Crear gráfico con colores profesionales
-colors = ['#2C3E50', '#34495E', '#3498DB', '#2980B9', '#1ABC9C', 
+colors = ["#644D29", "#91A0AF", "#CD34DB", "#D42708", "#BC1A4B", 
           '#16A085', '#27AE60', '#229954', '#F39C12', '#E67E22']
 
 fig = go.Figure(data=go.Bar(
@@ -400,7 +400,3 @@ yaxis=dict(
     )
 
 
-# Envolver el gráfico en un contenedor
-st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-st.plotly_chart(fig, use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)

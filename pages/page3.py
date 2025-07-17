@@ -4,292 +4,327 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-from Utils.data_loader import load_data
-from Utils.plotting import RATING_PALETTE, PERFORMANCE_PALETTE, GENDER_PALETTE
-import plotly.io as pio
+from Utils.data_loader import load_perfume_data
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Calificaciones y Performance",
-    page_icon="⭐",
+    page_title="Uso y Características",
+    page_icon="⏰",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Paletas de colores personalizadas para esta página
-RATING_PALETTE = [
-    '#FFD700',  # Dorado (excelente)
-    '#FF6B35',  # Naranja rojizo (muy bueno)
-    '#F7931E',  # Naranja (bueno)
-    '#FFB84D',  # Naranja claro (regular)
-    '#8B4513',  # Marrón (malo)
+# PALETAS PROFESIONALES
+TEMPORAL_PALETTE = [
+    '#2C3E50',  # Azul oscuro
+    '#34495E',  # Gris azulado
+    '#3498DB',  # Azul claro
+    '#2980B9',  # Azul medio
+    '#1ABC9C',  # Verde agua
 ]
 
-PERFORMANCE_PALETTE = [
-    '#2E8B57',  # Verde bosque (longevidad)
-    '#4682B4',  # Azul acero (proyección)
-    '#9370DB',  # Violeta (durabilidad)
-    '#DC143C',  # Rojo carmesí (intensidad)
-    '#FF8C00',  # Naranja oscuro (calidad)
-]
+SEASON_PALETTE = {
+    'Invierno': '#2C3E50',     # Azul oscuro
+    'Primavera': '#27AE60',    # Verde
+    'Verano': '#F39C12',       # Naranja
+    'Otoño': '#E74C3C'         # Rojo
+}
 
 GENDER_PALETTE = {
-    'femenino': '#FF69B4',      # Rosa intenso
-    'masculino': '#4169E1',     # Azul real
-    'unisex': '#32CD32',        # Verde lima
-    'unisex_femenino': '#FF1493', # Rosa profundo
-    'unisex_masculino': '#1E90FF' # Azul dodger
+    'femenino': '#E74C3C',      # Rojo
+    'masculino': '#3498DB',     # Azul
+    'unisex': '#2ECC71',        # Verde
+    'unisex_femenino': '#E67E22', # Naranja
+    'unisex_masculino': '#9B59B6' # Púrpura
 }
+
+LONGEVITY_PALETTE = ['#E74C3C', '#E67E22', '#F39C12', '#27AE60', '#2ECC71']
+SILLAGE_PALETTE = ['#3498DB', '#2980B9', '#8E44AD', '#9B59B6']
 
 @st.cache_data
 def load_and_process_data():
-    """Carga y procesa los datos para análisis de calificaciones"""
-    df = load_data()
+    """Carga y procesa los datos para análisis temporal"""
+    df_full = load_perfume_data()
+    df = df_full.head(521)  # Solo primeros 521
     
-    # Limpieza de datos para ratings
+    # Renombrar columnas para facilitar el trabajo
+    df = df.rename(columns={
+        'calificationNumbers.ratingValue': 'rating',
+        'calificationNumbers.ratingCount': 'ratingCount'
+    })
+    
+    # Limpieza de datos
     df_clean = df.dropna(subset=['rating']).copy()
-    df_clean['rating_category'] = pd.cut(df_clean['rating'], 
-                                       bins=[0, 2, 3, 4, 4.5, 5], 
-                                       labels=['Malo', 'Regular', 'Bueno', 'Muy Bueno', 'Excelente'])
     
-    # Procesamiento de reviews
-    df_clean['review_category'] = pd.cut(df_clean['ratingCount'], 
-                                       bins=[0, 10, 50, 200, 1000, float('inf')], 
-                                       labels=['Nuevo', 'Poco Conocido', 'Conocido', 'Popular', 'Muy Popular'])
+    # Crear columna de género dominante
+    gender_cols = ['gender.femenino', 'gender.masculino', 'gender.unisex', 
+                   'gender.unisex_femenino', 'gender.unisex_masculino']
+    df_clean['gender_dominant'] = df_clean[gender_cols].idxmax(axis=1).str.replace('gender.', '')
     
     return df_clean
 
-def create_rating_distribution():
-    """Crea histograma de distribución de ratings"""
-    df = load_and_process_data()
+def create_seasonal_analysis(df_filtered):
+    """Crea análisis de uso por estaciones"""
+    season_cols = ['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']
+    season_labels = ['Invierno', 'Primavera', 'Verano', 'Otoño']
     
-    fig = px.histogram(
-        df, 
-        x='rating', 
-        nbins=20,
-        title='Distribución de Calificaciones de Perfumes',
-        labels={'rating': 'Calificación', 'count': 'Cantidad de Perfumes'},
-        color_discrete_sequence=[RATING_PALETTE[2]]
+    # Sumar votos por estación
+    season_votes = df_filtered[season_cols].sum()
+    season_votes.index = season_labels
+    
+    fig = px.bar(
+        x=season_votes.index,
+        y=season_votes.values,
+        title='Preferencias de Uso por Estación del Año',
+        labels={'x': 'Estación', 'y': 'Total de Votos'},
+        color=season_votes.index,
+        color_discrete_map=SEASON_PALETTE
     )
     
-    # Añadir línea de promedio
-    mean_rating = df['rating'].mean()
-    fig.add_vline(x=mean_rating, line_dash="dash", line_color="red", 
-                  annotation_text=f"Promedio: {mean_rating:.2f}")
+    fig.update_layout(
+        height=400,
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        title=dict(font=dict(color='#2C3E50', size=14)),
+        xaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
+        yaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
+        showlegend=False
+    )
+    
+    return fig
+
+def create_day_night_analysis(df_filtered):
+    """Crea análisis de uso diurno vs nocturno"""
+    day_night_data = {
+        'Día': df_filtered['timeDay.Dia'].sum(),
+        'Noche': df_filtered['timeDay.Noche'].sum()
+    }
+    
+    fig = px.pie(
+        values=list(day_night_data.values()),
+        names=list(day_night_data.keys()),
+        title='Distribución de Uso: Día vs Noche',
+        color_discrete_sequence=[TEMPORAL_PALETTE[2], TEMPORAL_PALETTE[0]]
+    )
     
     fig.update_layout(
+        height=400,
+        paper_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        title=dict(font=dict(color='#2C3E50', size=14)),
+        legend=dict(
+            bgcolor='rgba(255,255,255,0.9)',
+            bordercolor='#ECF0F1',
+            borderwidth=1,
+            font=dict(color='#2C3E50')
+        )
+    )
+    
+    return fig
+
+def create_longevity_analysis(df_filtered):
+    """Crea análisis de longevidad"""
+    longevity_cols = ['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']
+    longevity_labels = ['Escasa', 'Débil', 'Moderada', 'Duradera', 'Muy Duradera']
+    
+    # Sumar votos por categoría
+    longevity_votes = df_filtered[longevity_cols].sum()
+    longevity_votes.index = longevity_labels
+    
+    fig = px.bar(
+        x=longevity_votes.index,
+        y=longevity_votes.values,
+        title='Distribución de Votos por Longevidad',
+        labels={'x': 'Categoría de Longevidad', 'y': 'Total de Votos'},
+        color=longevity_votes.values,
+        color_continuous_scale='Blues'
+    )
+    
+    fig.update_layout(
+        height=400,
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        title=dict(font=dict(color='#2C3E50', size=14)),
+        xaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
+        yaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
         showlegend=False,
-        height=400,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        coloraxis_colorbar=dict(
+            title=dict(font=dict(color='#2C3E50')),
+            tickfont=dict(color='#2C3E50')
+        )
     )
     
     return fig
 
-def create_rating_vs_reviews_scatter():
-    """Crea scatter plot de rating vs número de reviews"""
-    df = load_and_process_data()
+def create_sillage_analysis(df_filtered):
+    """Crea análisis de sillage (proyección)"""
+    sillage_cols = ['sillage.suave', 'sillage.moderada', 'sillage.pesada', 'sillage.enorme']
+    sillage_labels = ['Suave', 'Moderada', 'Pesada', 'Enorme']
     
-    fig = px.scatter(
-        df,
-        x='ratingCount',
-        y='rating',
-        color='gender',
-        size='rating',
-        hover_data=['name', 'brand'],
-        title='Relación entre Popularidad y Calificación',
-        labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
-        color_discrete_map=GENDER_PALETTE
-    )
+    # Sumar votos por categoría
+    sillage_votes = df_filtered[sillage_cols].sum()
+    sillage_votes.index = sillage_labels
     
-    fig.update_layout(
-        height=500,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return fig
-
-def create_rating_by_gender_boxplot():
-    """Crea box plot de ratings por género"""
-    df = load_and_process_data()
-    
-    fig = px.box(
-        df,
-        x='gender',
-        y='rating',
-        title='Distribución de Calificaciones por Género',
-        labels={'gender': 'Género', 'rating': 'Calificación'},
-        color='gender',
-        color_discrete_map=GENDER_PALETTE
+    fig = px.bar(
+        x=sillage_votes.index,
+        y=sillage_votes.values,
+        title='Distribución de Votos por Sillage (Proyección)',
+        labels={'x': 'Categoría de Sillage', 'y': 'Total de Votos'},
+        color=sillage_votes.values,
+        color_continuous_scale='Purples'
     )
     
     fig.update_layout(
         height=400,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        title=dict(font=dict(color='#2C3E50', size=14)),
+        xaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
+        yaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
+        showlegend=False,
+        coloraxis_colorbar=dict(
+            title=dict(font=dict(color='#2C3E50')),
+            tickfont=dict(color='#2C3E50')
+        )
     )
     
     return fig
 
-def create_performance_radar():
-    """Crea radar chart de características de performance"""
-    df = load_and_process_data()
+def create_gender_temporal_analysis(df_filtered):
+    """Crea análisis temporal por género"""
+    season_cols = ['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']
+    season_labels = ['Invierno', 'Primavera', 'Verano', 'Otoño']
     
-    # Calcular promedios por género
-    performance_cols = ['longevity', 'sillage', 'projection']
-    available_cols = [col for col in performance_cols if col in df.columns]
-    
-    if not available_cols:
-        st.warning("No hay datos de performance disponibles en el dataset")
-        return None
-    
-    gender_performance = df.groupby('gender')[available_cols].mean()
+    # Agrupar por género y calcular promedios por estación
+    gender_season = df_filtered.groupby('gender_dominant')[season_cols].mean()
+    gender_season.columns = season_labels
     
     fig = go.Figure()
     
-    for i, gender in enumerate(gender_performance.index):
+    for gender in gender_season.index:
         fig.add_trace(go.Scatterpolar(
-            r=gender_performance.loc[gender].values,
-            theta=available_cols,
+            r=gender_season.loc[gender].values,
+            theta=season_labels,
             fill='toself',
-            name=gender.title(),
-            line_color=GENDER_PALETTE.get(gender, PERFORMANCE_PALETTE[i])
+            name=gender.replace('_', ' ').title(),
+            line=dict(color=GENDER_PALETTE.get(gender, TEMPORAL_PALETTE[0]), width=2)
         ))
     
     fig.update_layout(
         polar=dict(
             radialaxis=dict(
                 visible=True,
-                range=[0, 5]
-            )),
+                range=[0, gender_season.values.max() * 1.1],
+                tickfont=dict(color='#2C3E50'),
+                gridcolor='#ECF0F1',
+                linecolor='#BDC3C7'
+            ),
+            angularaxis=dict(
+                tickfont=dict(color='#2C3E50'),
+                linecolor='#BDC3C7'
+            )
+        ),
         showlegend=True,
-        title="Performance Promedio por Género",
-        height=500
-    )
-    
-    return fig
-
-def create_top_rated_perfumes():
-    """Crea tabla de perfumes mejor calificados"""
-    df = load_and_process_data()
-    
-    # Filtrar perfumes con al menos 10 reviews
-    df_filtered = df[df['ratingCount'] >= 10]
-    top_perfumes = df_filtered.nlargest(20, 'rating')[['name', 'brand', 'rating', 'ratingCount', 'gender']]
-    
-    fig = go.Figure(data=[go.Table(
-        header=dict(
-            values=['Perfume', 'Marca', 'Calificación', 'Reviews', 'Género'],
-            fill_color=RATING_PALETTE[0],
-            align='left',
-            font=dict(color='white', size=12)
+        title=dict(
+            text="Preferencias Estacionales por Género",
+            font=dict(color='#2C3E50', size=14)
         ),
-        cells=dict(
-            values=[top_perfumes['name'], 
-                   top_perfumes['brand'],
-                   top_perfumes['rating'].round(2),
-                   top_perfumes['ratingCount'],
-                   top_perfumes['gender']],
-            fill_color='lavender',
-            align='left',
-            font=dict(color='black', size=11)
+        height=500,
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        legend=dict(
+            bgcolor='rgba(255,255,255,0.9)',
+            bordercolor='#ECF0F1',
+            borderwidth=1,
+            font=dict(color='#2C3E50')
         )
-    )])
-    
-    fig.update_layout(
-        title="Top 20 Perfumes Mejor Calificados (mín. 10 reviews)",
-        height=600
     )
     
     return fig
 
-def create_rating_trends():
-    """Crea análisis de tendencias de rating"""
-    df = load_and_process_data()
+def create_price_analysis(df_filtered):
+    """Crea análisis de rangos de precio"""
+    price_cols = ['price.excelente_precio', 'price.buen_precio', 'price.precio_moderado', 'price.ligeramente_costoso', 'price.extremadamente_costoso']
+    price_labels = ['Excelente', 'Bueno', 'Moderado', 'Ligeramente Costoso', 'Extremadamente Costoso']
     
-    # Crear bins de popularidad
-    df['popularity_tier'] = pd.cut(df['ratingCount'], 
-                                 bins=[0, 10, 50, 200, float('inf')], 
-                                 labels=['Nicho', 'Emergente', 'Establecido', 'Mainstream'])
+    # Sumar votos por categoría de precio
+    price_votes = df_filtered[price_cols].sum()
+    price_votes.index = price_labels
     
-    rating_by_popularity = df.groupby('popularity_tier')['rating'].agg(['mean', 'count']).reset_index()
-    
-    fig = make_subplots(
-        rows=1, cols=2,
-        subplot_titles=('Rating Promedio por Popularidad', 'Cantidad de Perfumes por Categoría'),
-        specs=[[{"secondary_y": False}, {"secondary_y": False}]]
-    )
-    
-    # Gráfico de barras para rating promedio
-    fig.add_trace(
-        go.Bar(
-            x=rating_by_popularity['popularity_tier'],
-            y=rating_by_popularity['mean'],
-            name='Rating Promedio',
-            marker_color=RATING_PALETTE[1]
-        ),
-        row=1, col=1
-    )
-    
-    # Gráfico de barras para cantidad
-    fig.add_trace(
-        go.Bar(
-            x=rating_by_popularity['popularity_tier'],
-            y=rating_by_popularity['count'],
-            name='Cantidad',
-            marker_color=RATING_PALETTE[3]
-        ),
-        row=1, col=2
+    fig = px.bar(
+        x=price_votes.index,
+        y=price_votes.values,
+        title='Distribución de Votos por Rango de Precio',
+        labels={'x': 'Categoría de Precio', 'y': 'Total de Votos'},
+        color=price_votes.values,
+        color_continuous_scale='Greens'
     )
     
     fig.update_layout(
         height=400,
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        font=dict(color='#2C3E50'),
+        title=dict(font=dict(color='#2C3E50', size=14)),
+        xaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50')),
+            tickangle=45
+        ),
+        yaxis=dict(
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
+        ),
         showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return fig
-
-def create_brand_performance():
-    """Crea análisis de performance por marca"""
-    df = load_and_process_data()
-    
-    # Top 15 marcas por cantidad de perfumes
-    top_brands = df['brand'].value_counts().head(15).index
-    df_brands = df[df['brand'].isin(top_brands)]
-    
-    brand_stats = df_brands.groupby('brand').agg({
-        'rating': ['mean', 'count'],
-        'ratingCount': 'sum'
-    }).round(2)
-    
-    brand_stats.columns = ['rating_promedio', 'cantidad_perfumes', 'total_reviews']
-    brand_stats = brand_stats.sort_values('rating_promedio', ascending=True)
-    
-    fig = px.bar(
-        brand_stats.reset_index(),
-        x='rating_promedio',
-        y='brand',
-        orientation='h',
-        title='Rating Promedio por Marca (Top 15)',
-        labels={'rating_promedio': 'Rating Promedio', 'brand': 'Marca'},
-        color='rating_promedio',
-        color_continuous_scale=RATING_PALETTE
-    )
-    
-    fig.update_layout(
-        height=600,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
+        coloraxis_colorbar=dict(
+            title=dict(font=dict(color='#2C3E50')),
+            tickfont=dict(color='#2C3E50')
+        )
     )
     
     return fig
 
 # Interfaz principal
 def main():
-    st.title("⭐ Análisis de Calificaciones y Performance")
+    st.title("Análisis de Uso y Características")
     st.markdown("---")
     
     # Sidebar con filtros
@@ -299,19 +334,24 @@ def main():
     
     # Filtros
     min_rating = st.sidebar.slider("Rating Mínimo", 0.0, 5.0, 0.0, 0.1)
-    min_reviews = st.sidebar.slider("Mínimo de Reviews", 0, 1000, 0, 10)
+    min_reviews = st.sidebar.slider("Mínimo de Reviews", 0, int(df['ratingCount'].max()), 0)
     selected_genders = st.sidebar.multiselect(
         "Géneros a Analizar",
-        df['gender'].unique(),
-        default=df['gender'].unique()
+        df['gender_dominant'].unique(),
+        default=df['gender_dominant'].unique()
     )
     
     # Aplicar filtros
     df_filtered = df[
         (df['rating'] >= min_rating) & 
         (df['ratingCount'] >= min_reviews) & 
-        (df['gender'].isin(selected_genders))
+        (df['gender_dominant'].isin(selected_genders))
     ]
+    
+    # Verificar si hay datos filtrados
+    if len(df_filtered) == 0:
+        st.warning("No hay perfumes que cumplan con los filtros seleccionados. Intenta ajustar los criterios.")
+        return
     
     # Métricas principales
     col1, col2, col3, col4 = st.columns(4)
@@ -320,81 +360,72 @@ def main():
         st.metric("Perfumes Analizados", len(df_filtered))
     
     with col2:
-        st.metric("Rating Promedio", f"{df_filtered['rating'].mean():.2f}")
+        season_total = df_filtered[['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']].sum().sum()
+        st.metric("Total Votos Estacionales", f"{season_total:,}")
     
     with col3:
-        st.metric("Total de Reviews", f"{df_filtered['ratingCount'].sum():,}")
+        day_night_total = df_filtered[['timeDay.Dia', 'timeDay.Noche']].sum().sum()
+        st.metric("Total Votos Día/Noche", f"{day_night_total:,}")
     
     with col4:
-        st.metric("Mejor Calificado", f"{df_filtered['rating'].max():.2f}")
+        longevity_total = df_filtered[['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']].sum().sum()
+        st.metric("Total Votos Longevidad", f"{longevity_total:,}")
     
     st.markdown("---")
     
-    # Fila 1: Distribución y Scatter Plot
+    # Fila 1: Análisis Estacional y Día/Noche
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_rating_distribution(), use_container_width=True)
+        st.plotly_chart(create_seasonal_analysis(df_filtered), use_container_width=True)
     
     with col2:
-        st.plotly_chart(create_rating_vs_reviews_scatter(), use_container_width=True)
+        st.plotly_chart(create_day_night_analysis(df_filtered), use_container_width=True)
     
-    # Fila 2: Box Plot y Radar Chart
+    # Fila 2: Longevidad y Sillage
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_rating_by_gender_boxplot(), use_container_width=True)
+        st.plotly_chart(create_longevity_analysis(df_filtered), use_container_width=True)
     
     with col2:
-        radar_fig = create_performance_radar()
-        if radar_fig:
-            st.plotly_chart(radar_fig, use_container_width=True)
-        else:
-            st.info("Radar chart de performance no disponible - datos faltantes")
+        st.plotly_chart(create_sillage_analysis(df_filtered), use_container_width=True)
     
-    # Fila 3: Tendencias de Rating
-    st.plotly_chart(create_rating_trends(), use_container_width=True)
+    # Fila 3: Análisis por Género y Precios
+    col1, col2 = st.columns(2)
     
-    # Fila 4: Performance por Marca
-    st.plotly_chart(create_brand_performance(), use_container_width=True)
+    with col1:
+        st.plotly_chart(create_gender_temporal_analysis(df_filtered), use_container_width=True)
     
-    # Fila 5: Top Perfumes
-    st.plotly_chart(create_top_rated_perfumes(), use_container_width=True)
+    with col2:
+        st.plotly_chart(create_price_analysis(df_filtered), use_container_width=True)
     
-    # Botón de descarga
+    # Insights automáticos
     st.markdown("---")
-    if st.button("Descargar Análisis de Calificaciones"):
-        # Crear HTML con todos los gráficos
-        html_content = f"""
-        <html>
-        <head>
-            <title>Análisis de Calificaciones - Dashboard de Perfumes</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                .chart {{ margin: 20px 0; }}
-                h1 {{ color: #8B4513; }}
-            </style>
-        </head>
-        <body>
-            <h1>Análisis de Calificaciones y Performance</h1>
-            <p>Perfumes analizados: {len(df_filtered)}</p>
-            <p>Rating promedio: {df_filtered['rating'].mean():.2f}</p>
-            <div class="chart">{create_rating_distribution().to_html()}</div>
-            <div class="chart">{create_rating_vs_reviews_scatter().to_html()}</div>
-            <div class="chart">{create_rating_by_gender_boxplot().to_html()}</div>
-            <div class="chart">{create_rating_trends().to_html()}</div>
-            <div class="chart">{create_brand_performance().to_html()}</div>
-            <div class="chart">{create_top_rated_perfumes().to_html()}</div>
-        </body>
-        </html>
-        """
-        
-        st.download_button(
-            label="Descargar Reporte HTML",
-            data=html_content,
-            file_name="analisis_calificaciones.html",
-            mime="text/html"
-        )
+    st.subheader("Insights Clave")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Estación más popular
+        season_cols = ['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']
+        season_votes = df_filtered[season_cols].sum()
+        most_popular_season = season_votes.idxmax().replace('timeSeasons.', '')
+        st.info(f"**Estación más popular:** {most_popular_season}")
+    
+    with col2:
+        # Momento del día preferido
+        day_votes = df_filtered['timeDay.Dia'].sum()
+        night_votes = df_filtered['timeDay.Noche'].sum()
+        preferred_time = "Día" if day_votes > night_votes else "Noche"
+        st.info(f"**Momento preferido:** {preferred_time}")
+    
+    with col3:
+        # Longevidad más común
+        longevity_cols = ['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']
+        longevity_votes = df_filtered[longevity_cols].sum()
+        most_common_longevity = longevity_votes.idxmax().replace('longevity.', '').title()
+        st.info(f"**Longevidad más votada:** {most_common_longevity}")
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 from Utils.data_loader import cargar_datos
-from Utils.plotting import RATING_PALETTE, PERFORMANCE_PALETTE, GENDER_PALETTE
 import plotly.io as pio
 
 # Configuración de la página

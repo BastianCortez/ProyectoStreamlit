@@ -317,7 +317,6 @@ with col4:
         zmid=0,
         colorbar=dict(
             title="Correlación",
-            titleside="right",
             tickmode="linear",
             tick0=-1,
             dtick=0.5

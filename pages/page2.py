@@ -147,7 +147,8 @@ def create_rating_vs_reviews_scatter(df_filtered):
         title='Relación entre Popularidad y Calificación',
         labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
         color_discrete_map=GENDER_PALETTE,
-        log_x=True
+        log_x=True,
+        size_max=15
     )
     
     fig.update_layout(

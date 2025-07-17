@@ -173,7 +173,6 @@ with col1:
                 theta=categories,
                 fill='toself',
                 name='Frecuencia (normalizada)',
-                font=dict(size=14, color='#2C3E50'),
                 line=dict(color=PRIMARY_PALETTE[0], width=3),
                 fillcolor=hex_to_rgba(PRIMARY_PALETTE[0], 0.2)
             ))
@@ -185,7 +184,6 @@ with col1:
                 fill='toself',
                 name='Intensidad Promedio (%)',
                 line=dict(color=PRIMARY_PALETTE[2], width=3),
-                font=dict(size=14, color='#2C3E50'),
                 fillcolor=hex_to_rgba(PRIMARY_PALETTE[2], 0.2)
             ))
             

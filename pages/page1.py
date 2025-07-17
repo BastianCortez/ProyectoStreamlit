@@ -302,12 +302,14 @@ with col3:
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         )
         fig_hist.update_yaxes(
             title_text="Frecuencia",
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         )
         
         st.plotly_chart(fig_hist, use_container_width=True)
@@ -356,12 +358,14 @@ with col4:
             side="bottom", 
             tickangle=45,
             tickfont=dict(color='#2C3E50', size=10), 
-            linecolor='#BDC3C7'
+            linecolor='#BDC3C7',
+            title=dict(text="Acordes", font=dict(color='#2C3E50'))
         ),
         yaxis=dict(
             side="left",
             tickfont=dict(color='#2C3E50', size=10), 
-            linecolor='#BDC3C7'
+            linecolor='#BDC3C7',
+            title=dict(text="Acordes", font=dict(color='#2C3E50'))
         ),
         height=400,
         paper_bgcolor='white',

@@ -4,8 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from Utils.data_loader import load_data
 from Utils.plotting import RATING_PALETTE, PERFORMANCE_PALETTE, GENDER_PALETTE
 import plotly.io as pio

@@ -6,8 +6,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 from Utils.data_loader import load_perfume_data
 
-        
-# Configuración de la página
 st.set_page_config(
     page_title="Calificaciones y Performance",
     page_icon="⭐",
@@ -97,7 +95,7 @@ def create_rating_distribution(df_filtered):
         x='rating', 
         nbins=25,
         title='Distribución de Calificaciones de Perfumes',
-        labels={'rating': 'Calificación', 'count': 'Cantidad de Perfumes'},
+        labels={'rating': 'Calificación', 'cuenta': 'Cantidad de Perfumes'},
         color_discrete_sequence=[RATING_PALETTE[2]]
     )
     
@@ -148,7 +146,7 @@ def create_rating_vs_reviews_scatter(df_filtered):
         labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
         color_discrete_map=GENDER_PALETTE,
         log_x=True,
-        size_max=10
+        size_max = 10
     )
     
     fig.update_layout(
@@ -388,7 +386,7 @@ def main():
     ]
     
     # Métricas principales
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric("Perfumes Analizados", len(df_filtered))
@@ -398,6 +396,9 @@ def main():
     
     with col3:
         st.metric("Total Reviews", f"{df_filtered['ratingCount'].sum():,}" if len(df_filtered) > 0 else "0")
+    
+    with col4:
+        st.metric("Valor Promedio", f"{df_filtered['value_score'].mean():.1f}" if len(df_filtered) > 0 else "N/A")
     
     st.markdown("---")
     
@@ -415,20 +416,11 @@ def main():
     with col2:
         st.plotly_chart(create_rating_vs_reviews_scatter(df_filtered), use_container_width=True)
     
-    # Fila 2: Análisis de Sentimientos y Distribución por Género
+    # Fila 2: Distribución por Género y Análisis de Longevidad
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_sentiment_analysis(df_filtered), use_container_width=True)
-    
-    with col2:
         st.plotly_chart(create_gender_distribution(df_filtered), use_container_width=True)
-    
-    # Fila 3: Performance Radar y Análisis de Longevidad
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.plotly_chart(create_performance_radar(df_filtered), use_container_width=True)
     
     with col2:
         st.plotly_chart(create_longevity_analysis(df_filtered), use_container_width=True)

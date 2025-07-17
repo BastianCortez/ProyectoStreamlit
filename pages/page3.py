@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 from Utils.data_loader import load_perfume_data
 
-# Configuración de la página
 st.set_page_config(
     page_title="Uso y Características",
     page_icon="⏰",
@@ -276,48 +275,50 @@ def create_gender_temporal_analysis(df_filtered):
     
     return fig
 
-def create_price_analysis(df_filtered):
-    """Crea análisis de rangos de precio"""
-    price_cols = ['price.excelente_precio', 'price.buen_precio', 'price.precio_moderado', 'price.ligeramente_costoso', 'price.extremadamente_costoso']
-    price_labels = ['Excelente', 'Bueno', 'Moderado', 'Ligeramente Costoso', 'Extremadamente Costoso']
+def create_season_gender_heatmap(df_filtered):
+    """Crea heatmap de estaciones vs género"""
+    season_cols = ['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']
+    season_labels = ['Invierno', 'Primavera', 'Verano', 'Otoño']
     
-    # Sumar votos por categoría de precio
-    price_votes = df_filtered[price_cols].sum()
-    price_votes.index = price_labels
+    # Crear matriz género x estación (promedios)
+    heatmap_data = df_filtered.groupby('gender_dominant')[season_cols].mean()
+    heatmap_data.columns = season_labels
     
-    fig = px.bar(
-        x=price_votes.index,
-        y=price_votes.values,
-        title='Distribución de Votos por Rango de Precio',
-        labels={'x': 'Categoría de Precio', 'y': 'Total de Votos'},
-        color=price_votes.values,
-        color_continuous_scale='Greens'
-    )
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_data.values,
+        x=season_labels,
+        y=[g.replace('_', ' ').title() for g in heatmap_data.index],
+        colorscale='RdYlBu',
+        colorbar=dict(
+            title="Intensidad de Preferencia",
+            titlefont=dict(color='#2C3E50'),
+            tickfont=dict(color='#2C3E50')
+        ),
+        text=heatmap_data.round(2).values,
+        texttemplate="%{text}",
+        textfont={"size": 12, "color": "#FFFFFF"},
+        hoverongaps=False
+    ))
     
     fig.update_layout(
+        title=dict(
+            text="Mapa de Calor: Preferencias Estacionales por Género",
+            font=dict(color='#2C3E50', size=14)
+        ),
+        xaxis=dict(
+            title="Estaciones",
+            tickfont=dict(color='#2C3E50'),
+            title_font=dict(color='#2C3E50')
+        ),
+        yaxis=dict(
+            title="Género",
+            tickfont=dict(color='#2C3E50'),
+            title_font=dict(color='#2C3E50')
+        ),
         height=400,
         paper_bgcolor='white',
         plot_bgcolor='white',
-        font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50', size=14)),
-        xaxis=dict(
-            gridcolor='#ECF0F1',
-            linecolor='#BDC3C7',
-            tickfont=dict(color='#2C3E50'),
-            title=dict(font=dict(color='#2C3E50')),
-            tickangle=45
-        ),
-        yaxis=dict(
-            gridcolor='#ECF0F1',
-            linecolor='#BDC3C7',
-            tickfont=dict(color='#2C3E50'),
-            title=dict(font=dict(color='#2C3E50'))
-        ),
-        showlegend=False,
-        coloraxis_colorbar=dict(
-            title=dict(font=dict(color='#2C3E50')),
-            tickfont=dict(color='#2C3E50')
-        )
+        font=dict(color='#2C3E50')
     )
     
     return fig
@@ -354,22 +355,18 @@ def main():
         return
     
     # Métricas principales
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("Perfumes Analizados", len(df_filtered))
     
     with col2:
         season_total = df_filtered[['timeSeasons.Invierno', 'timeSeasons.Primavera', 'timeSeasons.Verano', 'timeSeasons.Otoño']].sum().sum()
-        st.metric("Total Votos Estacionales", f"{season_total:.0f}")
+        st.metric("Total Votos Estacionales", f"{season_total:,}")
     
     with col3:
         day_night_total = df_filtered[['timeDay.Dia', 'timeDay.Noche']].sum().sum()
         st.metric("Total Votos Día/Noche", f"{day_night_total:,}")
-    
-    with col4:
-        longevity_total = df_filtered[['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']].sum().sum()
-        st.metric("Total Votos Longevidad", f"{longevity_total:,}")
     
     st.markdown("---")
     
@@ -391,14 +388,14 @@ def main():
     with col2:
         st.plotly_chart(create_sillage_analysis(df_filtered), use_container_width=True)
     
-    # Fila 3: Análisis por Género y Precios
+    # Fila 3: Radar por Género y Heatmap Estacional
     col1, col2 = st.columns(2)
     
     with col1:
         st.plotly_chart(create_gender_temporal_analysis(df_filtered), use_container_width=True)
     
     with col2:
-        st.plotly_chart(create_price_analysis(df_filtered), use_container_width=True)
+        st.plotly_chart(create_season_gender_heatmap(df_filtered), use_container_width=True)
     
     # Insights automáticos
     st.markdown("---")

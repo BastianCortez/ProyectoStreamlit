@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from Utils.data_loader import load_perfume_data, get_accord_stats
+
 # Configuración de página principal
 st.set_page_config(
     page_title="Dashboard de Perfumes - Análisis Olfativo",
@@ -14,43 +15,144 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        background: linear-gradient(90deg, #8B4513 0%, #D2B48C 50%, #FFB6C1 100%);
+        background: linear-gradient(135deg, #8B4513 0%, #D2B48C 50%, #FFB6C1 100%);
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .main-header h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .main-header p {
+        margin: 0.5rem 0 0 0;
+        font-size: 1.2rem;
+        opacity: 0.9;
     }
     
     .metric-card {
         background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border-left: 4px solid #8B4513;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-left: 5px solid #8B4513;
         margin: 1rem 0;
+        transition: transform 0.2s ease;
     }
     
-    .insight-box {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-        margin: 1rem 0;
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card h4 {
+        color: #2C3E50;
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .metric-card h2 {
+        margin: 0.5rem 0;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .metric-card p {
+        color: #7F8C8D;
+        margin: 0;
+        font-size: 0.9rem;
     }
     
     .navigation-card {
         background: white;
-        padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin: 1rem 0;
-        transition: transform 0.2s;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        margin: 1.5rem 0;
+        transition: all 0.3s ease;
+        border: 1px solid #E8E8E8;
+        height: auto;
+        min-height: 280px;
     }
     
     .navigation-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border-color: #8B4513;
+    }
+    
+    .navigation-card h3 {
+        color: #2C3E50;
+        margin: 0 0 1rem 0;
+        font-size: 1.4rem;
+        font-weight: bold;
+        border-bottom: 2px solid #8B4513;
+        padding-bottom: 0.5rem;
+    }
+    
+    .navigation-card p {
+        color: #34495E;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .navigation-card ul {
+        color: #2C3E50;
+        padding-left: 1.2rem;
+    }
+    
+    .navigation-card li {
+        margin: 0.3rem 0;
+        color: #34495E;
+    }
+    
+    .insight-section {
+        background: #F8F9FA;
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+        border: 1px solid #E9ECEF;
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+    
+    /* Arreglar sidebar */
+    .css-1d391kg {
+        padding-top: 2rem;
+    }
+    
+    /* Mejorar métricas de Streamlit */
+    [data-testid="metric-container"] {
+        background: white;
+        border: 1px solid #E8E8E8;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Títulos de sección */
+    .section-title {
+        color: #2C3E50;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #8B4513;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -88,7 +190,7 @@ if not pd.isna(avg_rating):
     st.sidebar.metric("Rating Promedio", f"{avg_rating:.2f}/5.0")
 
 # Navegación principal
-st.markdown("## 🗺️ Navegación del Dashboard")
+st.markdown('<h2 class="section-title">🗺️ Navegación del Dashboard</h2>', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
@@ -99,10 +201,10 @@ with col1:
         <p>Analiza los acordes aromáticos más frecuentes e intensos. Incluye radar charts, 
         correlaciones entre acordes y distribuciones de intensidad.</p>
         <ul>
-            <li>Radar de acordes seleccionados</li>
-            <li>Ranking de popularidad</li>
-            <li>Heatmap de correlaciones</li>
-            <li>Distribuciones de intensidad</li>
+            <li><strong>Radar de acordes seleccionados</strong></li>
+            <li><strong>Ranking de popularidad</strong></li>
+            <li><strong>Heatmap de correlaciones</strong></li>
+            <li><strong>Distribuciones de intensidad</strong></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -113,10 +215,10 @@ with col1:
         <p>Explora patrones temporales de uso, características de durabilidad 
         y proyección de las fragancias.</p>
         <ul>
-            <li>Análisis por estaciones</li>
-            <li>Uso diurno vs nocturno</li>
-            <li>Matriz durabilidad-proyección</li>
-            <li>Patrones de género</li>
+            <li><strong>Análisis por estaciones</strong></li>
+            <li><strong>Uso diurno vs nocturno</strong></li>
+            <li><strong>Matriz durabilidad-proyección</strong></li>
+            <li><strong>Patrones de género</strong></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -128,10 +230,10 @@ with col2:
         <p>Examina las calificaciones, popularidad y performance de los perfumes 
         en diferentes dimensiones.</p>
         <ul>
-            <li>Scatter plot rating vs reviews</li>
-            <li>Distribuciones por género</li>
-            <li>Análisis de sentimientos</li>
-            <li>Relación calidad-precio</li>
+            <li><strong>Scatter plot rating vs reviews</strong></li>
+            <li><strong>Distribuciones por género</strong></li>
+            <li><strong>Análisis de sentimientos</strong></li>
+            <li><strong>Relación calidad-precio</strong></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -142,17 +244,17 @@ with col2:
         <p>Herramientas avanzadas para comparar perfumes, encontrar similitudes 
         y explorar recomendaciones.</p>
         <ul>
-            <li>Comparador lado a lado</li>
-            <li>Búsqueda por similitud</li>
-            <li>Recomendaciones automáticas</li>
-            <li>Explorador de pirámides olfativas</li>
+            <li><strong>Comparador lado a lado</strong></li>
+            <li><strong>Búsqueda por similitud</strong></li>
+            <li><strong>Recomendaciones automáticas</strong></li>
+            <li><strong>Explorador de pirámides olfativas</strong></li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
 
 # Insights principales del dataset
 st.markdown("---")
-st.markdown("## 🧠 Insights Principales del Dataset")
+st.markdown('<h2 class="section-title">🧠 Insights Principales del Dataset</h2>', unsafe_allow_html=True)
 
 # Calcular insights
 accord_stats = get_accord_stats(df)
@@ -166,7 +268,7 @@ with insight_cols[0]:
     st.markdown(f"""
     <div class="metric-card">
         <h4>Acorde Más Popular</h4>
-        <h2 style="color: #8B4513;">{most_frequent_accord}</h2>
+        <h2 style="color: #8B4513; margin: 0.5rem 0;">{most_frequent_accord}</h2>
         <p>Presente en {frequency_pct:.1f}% de perfumes</p>
     </div>
     """, unsafe_allow_html=True)
@@ -178,8 +280,8 @@ with insight_cols[1]:
     st.markdown(f"""
     <div class="metric-card">
         <h4>Más Reseñado</h4>
-        <h2 style="color: #D2B48C;">{review_count:.0f}</h2>
-        <p>reseñas</p>
+        <h2 style="color: #D2B48C; margin: 0.5rem 0;">{review_count:.0f}</h2>
+        <p>reseñas totales</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -190,7 +292,7 @@ with insight_cols[2]:
     st.markdown(f"""
     <div class="metric-card">
         <h4>Complejidad Promedio</h4>
-        <h2 style="color: #FFB6C1;">{avg_complexity:.1f}</h2>
+        <h2 style="color: #FFB6C1; margin: 0.5rem 0;">{avg_complexity:.1f}</h2>
         <p>acordes por perfume</p>
     </div>
     """, unsafe_allow_html=True)
@@ -201,14 +303,14 @@ with insight_cols[3]:
     st.markdown(f"""
     <div class="metric-card">
         <h4>Rating Máximo</h4>
-        <h2 style="color: #FF8C00;">{highest_rated:.2f}</h2>
+        <h2 style="color: #FF8C00; margin: 0.5rem 0;">{highest_rated:.2f}</h2>
         <p>de 5.0 estrellas</p>
     </div>
     """, unsafe_allow_html=True)
 
 # Gráfico de resumen en la página principal
 st.markdown("---")
-st.markdown("## 📈 Vista General: Top 10 Acordes")
+st.markdown('<h2 class="section-title">📈 Vista General: Top 10 Acordes</h2>', unsafe_allow_html=True)
 
 # Crear gráfico de barras de top acordes
 top_10_data = []
@@ -231,59 +333,94 @@ fig = go.Figure(data=go.Bar(
     y=top_10_df['Frecuencia'],
     marker_color=colors,
     opacity=0.8,
-    text=top_10_df['Porcentaje'].round(1),
-    texttemplate='%{text}%',
-    textposition='outside'
+    text=[f"{p:.1f}%" for p in top_10_df['Porcentaje']],
+    textposition='outside',
+    textfont=dict(size=12, color='#2C3E50'),
+    hovertemplate='<b>%{x}</b><br>' +
+                  'Frecuencia: %{y} perfumes<br>' +
+                  'Porcentaje: %{text}<br>' +
+                  '<extra></extra>'
 ))
 
 fig.update_layout(
-    title="Frecuencia de los 10 Acordes Más Populares",
+    title=dict(
+        text="Frecuencia de los 10 Acordes Más Populares",
+        font=dict(size=18, color='#2C3E50', family='Arial'),
+        x=0.5
+    ),
     xaxis_title="Acordes",
     yaxis_title="Número de Perfumes",
     paper_bgcolor='white',
     plot_bgcolor='white',
-    font=dict(color='#2C3E50'),
-    height=500
+    font=dict(color='#2C3E50', size=12),
+    height=500,
+    margin=dict(t=80, b=60, l=60, r=60),
+    xaxis=dict(
+        tickangle=45,
+        gridcolor='#E5E5E5',
+        linecolor='#CCCCCC'
+    ),
+    yaxis=dict(
+        gridcolor='#E5E5E5',
+        linecolor='#CCCCCC'
+    )
 )
 
-fig.update_xaxes(tickangle=45)
-
+# Envolver el gráfico en un contenedor
+st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 st.plotly_chart(fig, use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Información adicional
 st.markdown("---")
-st.markdown("## ℹ️ Información Técnica")
+st.markdown('<h2 class="section-title">ℹ️ Información Técnica</h2>', unsafe_allow_html=True)
 
-with st.expander("Detalles del Dataset y Metodología"):
-    st.markdown("""
-    ### Estructura del Dataset
-    - **Total de registros**: 3,196 perfumes únicos
-    - **Columnas**: 114 variables diferentes
-    - **Acordes analizados**: 74 familias olfativas distintas
+with st.expander("📋 Detalles del Dataset y Metodología", expanded=False):
+    col_info1, col_info2 = st.columns(2)
     
-    ### Metodología de Análisis
-    - **Acordes**: Medidos como porcentajes de intensidad (0-100%)
-    - **Ratings**: Escala de 1.0 a 5.0 estrellas
-    - **Frecuencia**: Número de perfumes que contienen cada acorde
-    - **Correlaciones**: Coeficiente de Pearson entre intensidades
+    with col_info1:
+        st.markdown("""
+        ### 📊 Estructura del Dataset
+        - **Total de registros**: 3,196 perfumes únicos
+        - **Columnas**: 114 variables diferentes  
+        - **Acordes analizados**: 74 familias olfativas distintas
+        - **Cobertura temporal**: Múltiples épocas de perfumería
+        
+        ### 🔬 Metodología de Análisis
+        - **Acordes**: Medidos como porcentajes de intensidad (0-100%)
+        - **Ratings**: Escala de 1.0 a 5.0 estrellas
+        - **Frecuencia**: Número de perfumes que contienen cada acorde
+        - **Correlaciones**: Coeficiente de Pearson entre intensidades
+        """)
     
-    ### Navegación del Dashboard
-    Utiliza el menú lateral para navegar entre las diferentes páginas de análisis.
-    Cada página ofrece herramientas interactivas específicas para explorar
-    diferentes aspectos de los datos de perfumería.
-    
-    ### Interactividad
-    - Filtros dinámicos en tiempo real
-    - Descargas de gráficos y datos
-    - Tooltips informativos
-    - Múltiples vistas de los mismos datos
-    """)
+    with col_info2:
+        st.markdown("""
+        ### 🧭 Navegación del Dashboard
+        Utiliza el **menú lateral** para navegar entre las diferentes páginas de análisis.
+        Cada página ofrece herramientas interactivas específicas para explorar
+        diferentes aspectos de los datos de perfumería.
+        
+        ### ⚡ Interactividad
+        - **Filtros dinámicos** en tiempo real
+        - **Descargas** de gráficos y datos
+        - **Tooltips** informativos
+        - **Múltiples vistas** de los mismos datos
+        - **Visualizaciones responsivas**
+        """)
 
-# Footer
+# Footer mejorado
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p>Dashboard desarrollado para análisis académico de perfumería</p>
-    <p>Datos procesados: 3,196 perfumes | 74 acordes aromáticos | Múltiples dimensiones de análisis</p>
+<div style="text-align: center; color: #7F8C8D; padding: 2rem; background: #F8F9FA; border-radius: 10px; margin-top: 2rem;">
+    <h4 style="color: #2C3E50; margin-bottom: 1rem;">Dashboard de Análisis de Perfumería</h4>
+    <p style="margin: 0.5rem 0; font-size: 1rem;"><strong>Desarrollado para análisis académico avanzado</strong></p>
+    <p style="margin: 0; font-size: 0.9rem;">
+        📊 <strong>3,196 perfumes</strong> | 
+        🌸 <strong>74 acordes aromáticos</strong> | 
+        📈 <strong>Múltiples dimensiones de análisis</strong>
+    </p>
+    <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; opacity: 0.8;">
+        Utiliza la navegación lateral para explorar las diferentes secciones del dashboard
+    </p>
 </div>
 """, unsafe_allow_html=True)

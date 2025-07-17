@@ -173,6 +173,7 @@ with col1:
                 theta=categories,
                 fill='toself',
                 name='Frecuencia (normalizada)',
+                font=dict(size=14, color='#2C3E50'),
                 line=dict(color=PRIMARY_PALETTE[0], width=3),
                 fillcolor=hex_to_rgba(PRIMARY_PALETTE[0], 0.2)
             ))
@@ -184,6 +185,7 @@ with col1:
                 fill='toself',
                 name='Intensidad Promedio (%)',
                 line=dict(color=PRIMARY_PALETTE[2], width=3),
+                font=dict(size=14, color='#2C3E50'),
                 fillcolor=hex_to_rgba(PRIMARY_PALETTE[2], 0.2)
             ))
             
@@ -282,11 +284,19 @@ with col3:
                     )
         
         fig_hist.update_layout(
-            height=200 * len(selected_accords),
-            title_text="Distribución de Intensidades por Acorde",
-            showlegend=False,
-            paper_bgcolor='white'
-        )
+                height=180 * len(selected_accords),
+                title_text="Distribución de Intensidades por Acorde",
+                showlegend=False,
+                paper_bgcolor='white',
+                plot_bgcolor='white',
+                font=dict(color='#2C3E50'),
+                annotations=[  # ← AGREGAR ESTAS LÍNEAS
+                    dict(text=acc.title(), x=0.5, y=1-(i*0.95/len(selected_accords)), 
+                         xref="paper", yref="paper", xanchor="center", yanchor="top",
+                         font=dict(size=12, color='#2C3E50'), showarrow=False)
+                    for i, acc in enumerate(selected_accords)
+                ]
+            )
         
         fig_hist.update_xaxes(
             title_text="Intensidad (%)",
@@ -338,11 +348,20 @@ with col4:
     ))
     
     fig_corr.update_layout(
-        title="Correlaciones entre Acordes Principales",
-        xaxis=dict(side="bottom", tickangle=45),
-        yaxis=dict(side="left"),
-        height=400,
-        paper_bgcolor='white'
+       title=dict(
+        text="Correlaciones entre Acordes Principales",
+        font=dict(size=14, color='#2C3E50')
+    ),
+    xaxis=dict(
+        side="bottom", 
+        tickangle=45,
+        tickfont=dict(color='#2C3E50', size=10), 
+        linecolor='#BDC3C7'
+    ),
+    yaxis=dict(
+        side="left",
+        tickfont=dict(color='#2C3E50', size=10), 
+        linecolor='#BDC3C7'
     )
     
     st.plotly_chart(fig_corr, use_container_width=True)

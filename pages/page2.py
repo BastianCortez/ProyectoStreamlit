@@ -148,7 +148,7 @@ def create_rating_vs_reviews_scatter(df_filtered):
         labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
         color_discrete_map=GENDER_PALETTE,
         log_x=True,
-        size_max=15
+        size_max=10
     )
     
     fig.update_layout(

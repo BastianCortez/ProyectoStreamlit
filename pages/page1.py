@@ -264,32 +264,27 @@ def main():
     
     # Fila 1: Distribución y Scatter Plot
     col1, col2 = st.columns(2)
-    
     with col1:
-        st.plotly_chart(create_rating_distribution(), use_container_width=True)
-    
+        fig_dist = create_rating_distribution()
+        if fig_dist:
+            st.plotly_chart(fig_dist, use_container_width=True)
     with col2:
-        st.plotly_chart(create_rating_vs_reviews_scatter(), use_container_width=True)
-    
-    # Fila 2: Box Plot y Radar Chart
-    col1, col2 = st.columns(2)
-    with col1:
-        box_fig = create_rating_by_gender_boxplot()
-        if box_fig:
-            st.plotly_chart(box_fig, use_container_width=True)
-    with col2:
-        radar_fig = create_performance_radar()
-        if radar_fig:
-            st.plotly_chart(radar_fig, use_container_width=True)
+        fig_scatter = create_rating_vs_reviews_scatter()
+        if fig_scatter:
+            st.plotly_chart(fig_scatter, use_container_width=True)
     
     # Fila 3: Tendencias de Rating
-    st.plotly_chart(create_rating_trends(), use_container_width=True)
-    
+    fig_trends = create_rating_trends()
+    if fig_trends:
+        st.plotly_chart(fig_trends, use_container_width=True)
     # Fila 4: Performance por Marca
-    st.plotly_chart(create_brand_performance(), use_container_width=True)
-    
+    fig_brand = create_brand_performance()
+    if fig_brand:
+        st.plotly_chart(fig_brand, use_container_width=True)
     # Fila 5: Top Perfumes
-    st.plotly_chart(create_top_rated_perfumes(), use_container_width=True)
+    fig_top = create_top_rated_perfumes()
+    if fig_top:
+        st.plotly_chart(fig_top, use_container_width=True)
     # Botón de descarga
     st.markdown("---")
     if st.button("Descargar Análisis de Calificaciones"):

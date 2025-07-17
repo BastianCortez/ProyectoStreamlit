@@ -4,8 +4,16 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-from Utils.data_loader import load_perfume_data
-from Utils.plotting import create_custom_palette, download_plot_button
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Importar funciones propias (con manejo de errores)
+try:
+    from utils.data_loader import load_perfume_data
+    from utils.plotting import create_custom_palette, download_plot_button
+except ImportError:
+    st.error("No se pueden importar las utilidades. Asegúrate de que los archivos utils/ estén en la ubicación correcta.")
+    st.stop()
 
 # Configuración de página
 st.set_page_config(
@@ -17,7 +25,32 @@ st.set_page_config(
 # Cargar datos
 @st.cache_data
 def load_data():
-    return load_perfume_data()
+    try:
+        # Intentar cargar desde utils
+        from utils.data_loader import load_perfume_data
+        return load_perfume_data()
+    except ImportError:
+        # Fallback: cargar directamente
+        try:
+            df = pd.read_csv('data/perfumes_ordenado.csv')
+            # Limpieza básica
+            accord_columns = [col for col in df.columns if col.startswith('accords.')]
+            df[accord_columns] = df[accord_columns].fillna(0)
+            return df
+        except Exception as e:
+            st.error(f"Error al cargar datos: {e}")
+            return pd.DataFrame()
+
+def download_plot_button(fig, filename_prefix):
+    """Función simple para descargar gráficos"""
+    html_bytes = fig.to_html().encode()
+    st.download_button(
+        label="📥 Descargar Gráfico",
+        data=html_bytes,
+        file_name=f"{filename_prefix}.html",
+        mime="text/html",
+        help="Descarga el gráfico como archivo HTML interactivo"
+    )
 
 df = load_data()
 
@@ -41,6 +74,11 @@ INTENSITY_PALETTE = ['#FFF8DC', '#F0E68C', '#DAA520', '#B8860B', '#8B7355']
 
 # Paleta de correlaciones: divergente personalizada
 CORRELATION_PALETTE = ['#8B0000', '#FF6347', '#FFF8DC', '#98FB98', '#006400']
+
+def hex_to_rgba(hex_color, alpha=0.2):
+    """Convierte color hex a formato rgba"""
+    hex_color = hex_color.lstrip('#')
+    return f'rgba({int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}, {alpha})'
 
 # TÍTULO Y INTRODUCCIÓN
 st.title("🌸 Análisis de Acordes y Composición")
@@ -142,7 +180,7 @@ with col1:
                 fill='toself',
                 name='Frecuencia (normalizada)',
                 line=dict(color=PRIMARY_PALETTE[0], width=3),
-                fillcolor=f'{PRIMARY_PALETTE[0]}33'
+                fillcolor=hex_to_rgba(PRIMARY_PALETTE[0], 0.2)
             ))
             
             # Traza de intensidad promedio
@@ -152,7 +190,7 @@ with col1:
                 fill='toself',
                 name='Intensidad Promedio (%)',
                 line=dict(color=PRIMARY_PALETTE[2], width=3),
-                fillcolor=f'{PRIMARY_PALETTE[2]}33'
+                fillcolor=hex_to_rgba(PRIMARY_PALETTE[2], 0.2)
             ))
             
             fig_radar.update_layout(

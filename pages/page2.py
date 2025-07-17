@@ -183,13 +183,11 @@ def create_rating_vs_reviews_scatter():
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         legend=dict(
             bgcolor='rgba(255,255,255,0.9)',
@@ -232,13 +230,11 @@ def create_sentiment_analysis():
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         legend=dict(
             bgcolor='rgba(255,255,255,0.9)',
@@ -333,16 +329,13 @@ def create_longevity_sillage_analysis():
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         ),
         coloraxis_colorbar=dict(
-            titlefont=dict(color='#2C3E50'),
             tickfont=dict(color='#2C3E50')
         )
     )

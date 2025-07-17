@@ -290,8 +290,10 @@ def create_season_gender_heatmap(df_filtered):
         y=[g.replace('_', ' ').title() for g in heatmap_data.index],
         colorscale='RdYlBu',
         colorbar=dict(
-            title="Intensidad de Preferencia",
-            titlefont=dict(color='#2C3E50'),
+            title=dict(
+                text="Intensidad de Preferencia",
+                font=dict(color='#2C3E50')
+            ),
             tickfont=dict(color='#2C3E50')
         ),
         text=heatmap_data.round(2).values,

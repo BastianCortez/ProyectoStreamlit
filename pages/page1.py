@@ -77,7 +77,7 @@ def hex_to_rgba(hex_color, alpha=0.2):
     return f'rgba({int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}, {alpha})'
 
 # TÍTULO Y INTRODUCCIÓN
-st.title("🌸 Análisis de Acordes y Composición")
+st.title("Análisis de Acordes y Composición")
 st.markdown("""
 Explora la complejidad aromática de **3,196 perfumes** a través de sus acordes más característicos.
 Los acordes representan las familias olfativas que definen la personalidad de cada fragancia.
@@ -235,21 +235,11 @@ with col2:
     
     ranking_df = pd.DataFrame(ranking_data)
     
-    # Mostrar tabla estilizada
     st.dataframe(
         ranking_df,
         use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Perfumes": st.column_config.BarColumn(
-                "Perfumes",
-                help="Número de perfumes que contienen este acorde",
-                min_value=0,
-                max_value=ranking_df['Perfumes'].max(),
-            ),
-        }
+        hide_index=True
     )
-
 # SEGUNDA FILA DE VISUALIZACIONES
 st.markdown("---")
 

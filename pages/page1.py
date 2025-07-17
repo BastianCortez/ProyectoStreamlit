@@ -22,8 +22,6 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     try:
-        # Intentar cargar desde utils
-        from utils.data_loader import load_perfume_data
         return load_perfume_data()
     except ImportError:
         # Fallback: cargar directamente
@@ -190,17 +188,19 @@ with col1:
             ))
             
             fig_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, 100],
-                        tickfont=dict(size=10),
-                        gridcolor='#E5E5E5'
+                    polar=dict(
+                        radialaxis=dict(
+                            visible=True,
+                            range=[0, 100],
+                            tickfont=dict(size=11, color='#2C3E50'),  
+                            gridcolor='#ECF0F1',
+                            linecolor='#BDC3C7'
+                        ),
+                        angularaxis=dict(
+                            tickfont=dict(size=12, color='#2C3E50'),  
+                            linecolor='#BDC3C7'
+                        )
                     ),
-                    angularaxis=dict(
-                        tickfont=dict(size=12, color='#2C3E50')
-                    )
-                ),
                 showlegend=True,
                 title=dict(
                     text="Comparación de Frecuencia vs Intensidad",
@@ -288,9 +288,19 @@ with col3:
             paper_bgcolor='white'
         )
         
-        fig_hist.update_xaxes(title_text="Intensidad (%)")
-        fig_hist.update_yaxes(title_text="Frecuencia")
-        
+            fig_hist.update_xaxes(
+            title_text="Intensidad (%)",
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50')
+        )
+        fig_hist.update_yaxes(
+            title_text="Frecuencia",
+            gridcolor='#ECF0F1',
+            linecolor='#BDC3C7',
+            tickfont=dict(color='#2C3E50') 
+        )
+                
         st.plotly_chart(fig_hist, use_container_width=True)
         download_plot_button(fig_hist, "distribuciones_intensidad")
 
@@ -367,16 +377,3 @@ with insight_cols[2]:
         f"{total_combinations}",
         "De 74 posibles"
     )
-
-# Información técnica
-with st.expander("Información Técnica"):
-    st.markdown("""
-    **Metodología de Análisis:**
-    - **Acordes**: Intensidades expresadas como porcentajes (0-100%)
-    - **Frecuencia**: Número de perfumes que contienen cada acorde
-    - **Correlaciones**: Coeficiente de Pearson entre intensidades de acordes
-    - **Filtros**: Aplicados dinámicamente según selección del usuario
-    - **Dataset**: 521 perfumes con información completa
-    
-    **Paleta de Colores**: Diseño profesional con alta legibilidad
-    """)

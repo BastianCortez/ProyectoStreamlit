@@ -363,7 +363,7 @@ with col4:
         tickfont=dict(color='#2C3E50', size=10), 
         linecolor='#BDC3C7'
     )
-    
+    )
     st.plotly_chart(fig_corr, use_container_width=True)
     download_plot_button(fig_corr, "correlaciones_acordes")
 

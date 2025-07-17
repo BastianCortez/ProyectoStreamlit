@@ -317,7 +317,7 @@ def create_season_gender_heatmap(df_filtered):
             tickfont=dict(color='#2C3E50'),
             title_font=dict(color='#2C3E50')
         ),
-        height=400,
+        height=500,
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50')

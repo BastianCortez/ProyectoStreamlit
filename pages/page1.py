@@ -43,7 +43,7 @@ GENDER_PALETTE = {
 @st.cache_data
 def load_and_process_data():
     """Carga y procesa los datos para análisis de calificaciones"""
-    df = load_data()
+    df = cargar_datos()
     
     # Limpieza de datos para ratings
     df_clean = df.dropna(subset=['rating']).copy()

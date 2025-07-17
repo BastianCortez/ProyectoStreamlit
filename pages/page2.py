@@ -151,7 +151,6 @@ def create_rating_distribution():
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
-            titlefont=dict(color='#2C3E50')
         )
     )
     

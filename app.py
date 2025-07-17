@@ -48,7 +48,7 @@ def download_data(df, filename):
     """Permite descargar datos en formato CSV"""
     csv = df.to_csv(index=False)
     st.download_button(
-        label="📥 Descargar CSV",
+        label=" Descargar CSV",
         data=csv,
         file_name=filename,
         mime="text/csv"
@@ -62,7 +62,7 @@ def create_downloadable_plot(fig, filename):
     # Botón de descarga para la imagen
     img_bytes = fig.to_image(format="png")
     st.download_button(
-        label="📥 Descargar Gráfico",
+        label=" Descargar Gráfico",
         data=img_bytes,
         file_name=filename,
         mime="image/png"
@@ -70,25 +70,25 @@ def create_downloadable_plot(fig, filename):
 
 def main():
     # Sidebar para navegación
-    st.sidebar.title("🎯 Navegación")
+    st.sidebar.title(" Navegación")
     page = st.sidebar.selectbox(
         "Selecciona una página:",
-        ["📊 Dashboard Principal", "💼 Análisis de Empleados", "📈 Análisis de Ventas"]
+        [" Dashboard Principal", " Análisis de Empleados", " Análisis de Ventas"]
     )
     
     # Cargar datos
     sales_data, employees_data = load_sample_data()
     
-    if page == "📊 Dashboard Principal":
+    if page == " Dashboard Principal":
         show_dashboard_principal(sales_data, employees_data)
-    elif page == "💼 Análisis de Empleados":
+    elif page == " Análisis de Empleados":
         show_employee_analysis(employees_data)
-    elif page == "📈 Análisis de Ventas":
+    elif page == " Análisis de Ventas":
         show_sales_analysis(sales_data)
 
 def show_dashboard_principal(sales_data, employees_data):
     """Página principal del dashboard"""
-    st.title("📊 Dashboard Principal")
+    st.title(" Dashboard Principal")
     st.markdown("---")
     
     # Métricas generales
@@ -96,15 +96,15 @@ def show_dashboard_principal(sales_data, employees_data):
     
     with col1:
         total_sales = sales_data['ventas'].sum()
-        st.metric("💰 Ventas Totales", f"${total_sales:,.0f}")
+        st.metric(" Ventas Totales", f"${total_sales:,.0f}")
     
     with col2:
         avg_salary = employees_data['salario'].mean()
-        st.metric("💼 Salario Promedio", f"${avg_salary:,.0f}")
+        st.metric(" Salario Promedio", f"${avg_salary:,.0f}")
     
     with col3:
         total_employees = len(employees_data)
-        st.metric("👥 Total Empleados", total_employees)
+        st.metric(" Total Empleados", total_employees)
     
     with col4:
         avg_satisfaction = employees_data['satisfaccion'].mean()

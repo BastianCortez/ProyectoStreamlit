@@ -44,182 +44,122 @@ GENDER_PALETTE = {
 def load_and_process_data():
     """Carga y procesa los datos para análisis de calificaciones"""
     df = cargar_datos()
-    
     # Limpieza de datos para ratings
-    df_clean = df.dropna(subset=['rating']).copy()
-    df_clean['rating_category'] = pd.cut(df_clean['rating'], 
-                                       bins=[0, 2, 3, 4, 4.5, 5], 
-                                       labels=['Malo', 'Regular', 'Bueno', 'Muy Bueno', 'Excelente'])
-    
+    df_clean = df.dropna(subset=['calificationNumbers.ratingValue']).copy()
+    df_clean['rating_category'] = pd.cut(
+        df_clean['calificationNumbers.ratingValue'],
+        bins=[0, 2, 3, 4, 4.5, 5],
+        labels=['Malo', 'Regular', 'Bueno', 'Muy Bueno', 'Excelente']
+    )
     # Procesamiento de reviews
-    df_clean['review_category'] = pd.cut(df_clean['ratingCount'], 
-                                       bins=[0, 10, 50, 200, 1000, float('inf')], 
-                                       labels=['Nuevo', 'Poco Conocido', 'Conocido', 'Popular', 'Muy Popular'])
-    
+    df_clean['review_category'] = pd.cut(
+        df_clean['calificationNumbers.ratingCount'],
+        bins=[0, 10, 50, 200, 1000, float('inf')],
+        labels=['Nuevo', 'Poco Conocido', 'Conocido', 'Popular', 'Muy Popular']
+    )
     return df_clean
 
 def create_rating_distribution():
     """Crea histograma de distribución de ratings"""
     df = load_and_process_data()
-    
     fig = px.histogram(
-        df, 
-        x='rating', 
+        df,
+        x='calificationNumbers.ratingValue',
         nbins=20,
         title='Distribución de Calificaciones de Perfumes',
-        labels={'rating': 'Calificación', 'count': 'Cantidad de Perfumes'},
+        labels={'calificationNumbers.ratingValue': 'Calificación', 'count': 'Cantidad de Perfumes'},
         color_discrete_sequence=[RATING_PALETTE[2]]
     )
-    
     # Añadir línea de promedio
-    mean_rating = df['rating'].mean()
-    fig.add_vline(x=mean_rating, line_dash="dash", line_color="red", 
+    mean_rating = df['calificationNumbers.ratingValue'].mean()
+    fig.add_vline(x=mean_rating, line_dash="dash", line_color="red",
                   annotation_text=f"Promedio: {mean_rating:.2f}")
-    
     fig.update_layout(
         showlegend=False,
         height=400,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
-    
     return fig
 
 def create_rating_vs_reviews_scatter():
     """Crea scatter plot de rating vs número de reviews"""
     df = load_and_process_data()
-    
     fig = px.scatter(
         df,
-        x='ratingCount',
-        y='rating',
-        color='gender',
-        size='rating',
+        x='calificationNumbers.ratingCount',
+        y='calificationNumbers.ratingValue',
+        # color='gender',  # Elimina si no existe la columna gender
+        size='calificationNumbers.ratingValue',
         hover_data=['name', 'brand'],
         title='Relación entre Popularidad y Calificación',
-        labels={'ratingCount': 'Número de Reviews', 'rating': 'Calificación'},
-        color_discrete_map=GENDER_PALETTE
+        labels={'calificationNumbers.ratingCount': 'Número de Reviews', 'calificationNumbers.ratingValue': 'Calificación'}
+        # color_discrete_map=GENDER_PALETTE  # Elimina si no existe gender
     )
-    
     fig.update_layout(
         height=500,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
-    
     return fig
 
 def create_rating_by_gender_boxplot():
     """Crea box plot de ratings por género"""
     df = load_and_process_data()
-    
-    fig = px.box(
-        df,
-        x='gender',
-        y='rating',
-        title='Distribución de Calificaciones por Género',
-        labels={'gender': 'Género', 'rating': 'Calificación'},
-        color='gender',
-        color_discrete_map=GENDER_PALETTE
-    )
-    
-    fig.update_layout(
-        height=400,
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)'
-    )
-    
-    return fig
+    # Si no tienes columna 'gender', puedes eliminar esta función o adaptarla a otra columna
+    st.info("No hay columna 'gender' en el dataset para este gráfico.")
+    return None
 
 def create_performance_radar():
     """Crea radar chart de características de performance"""
     df = load_and_process_data()
-    
-    # Calcular promedios por género
-    performance_cols = ['longevity', 'sillage', 'projection']
-    available_cols = [col for col in performance_cols if col in df.columns]
-    
-    if not available_cols:
-        st.warning("No hay datos de performance disponibles en el dataset")
-        return None
-    
-    gender_performance = df.groupby('gender')[available_cols].mean()
-    
-    fig = go.Figure()
-    
-    for i, gender in enumerate(gender_performance.index):
-        fig.add_trace(go.Scatterpolar(
-            r=gender_performance.loc[gender].values,
-            theta=available_cols,
-            fill='toself',
-            name=gender.title(),
-            line_color=GENDER_PALETTE.get(gender, PERFORMANCE_PALETTE[i])
-        ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 5]
-            )),
-        showlegend=True,
-        title="Performance Promedio por Género",
-        height=500
-    )
-    
-    return fig
+    st.info("No hay datos de performance disponibles en el dataset para radar chart.")
+    return None
 
 def create_top_rated_perfumes():
     """Crea tabla de perfumes mejor calificados"""
     df = load_and_process_data()
-    
     # Filtrar perfumes con al menos 10 reviews
-    df_filtered = df[df['ratingCount'] >= 10]
-    top_perfumes = df_filtered.nlargest(20, 'rating')[['name', 'brand', 'rating', 'ratingCount', 'gender']]
-    
+    df_filtered = df[df['calificationNumbers.ratingCount'] >= 10]
+    top_perfumes = df_filtered.nlargest(20, 'calificationNumbers.ratingValue')[['name', 'brand', 'calificationNumbers.ratingValue', 'calificationNumbers.ratingCount']]
     fig = go.Figure(data=[go.Table(
         header=dict(
-            values=['Perfume', 'Marca', 'Calificación', 'Reviews', 'Género'],
+            values=['Perfume', 'Marca', 'Calificación', 'Reviews'],
             fill_color=RATING_PALETTE[0],
             align='left',
             font=dict(color='white', size=12)
         ),
         cells=dict(
-            values=[top_perfumes['name'], 
+            values=[top_perfumes['name'],
                    top_perfumes['brand'],
-                   top_perfumes['rating'].round(2),
-                   top_perfumes['ratingCount'],
-                   top_perfumes['gender']],
+                   top_perfumes['calificationNumbers.ratingValue'].round(2),
+                   top_perfumes['calificationNumbers.ratingCount']],
             fill_color='lavender',
             align='left',
             font=dict(color='black', size=11)
         )
     )])
-    
     fig.update_layout(
         title="Top 20 Perfumes Mejor Calificados (mín. 10 reviews)",
         height=600
     )
-    
     return fig
 
 def create_rating_trends():
     """Crea análisis de tendencias de rating"""
     df = load_and_process_data()
-    
     # Crear bins de popularidad
-    df['popularity_tier'] = pd.cut(df['ratingCount'], 
-                                 bins=[0, 10, 50, 200, float('inf')], 
-                                 labels=['Nicho', 'Emergente', 'Establecido', 'Mainstream'])
-    
-    rating_by_popularity = df.groupby('popularity_tier')['rating'].agg(['mean', 'count']).reset_index()
-    
+    df['popularity_tier'] = pd.cut(
+        df['calificationNumbers.ratingCount'],
+        bins=[0, 10, 50, 200, float('inf')],
+        labels=['Nicho', 'Emergente', 'Establecido', 'Mainstream']
+    )
+    rating_by_popularity = df.groupby('popularity_tier')['calificationNumbers.ratingValue'].agg(['mean', 'count']).reset_index()
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=('Rating Promedio por Popularidad', 'Cantidad de Perfumes por Categoría'),
         specs=[[{"secondary_y": False}, {"secondary_y": False}]]
     )
-    
     # Gráfico de barras para rating promedio
     fig.add_trace(
         go.Bar(
@@ -230,7 +170,6 @@ def create_rating_trends():
         ),
         row=1, col=1
     )
-    
     # Gráfico de barras para cantidad
     fig.add_trace(
         go.Bar(
@@ -241,32 +180,29 @@ def create_rating_trends():
         ),
         row=1, col=2
     )
-    
     fig.update_layout(
         height=400,
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
-    
     return fig
 
 def create_brand_performance():
     """Crea análisis de performance por marca"""
     df = load_and_process_data()
-    
     # Top 15 marcas por cantidad de perfumes
-    top_brands = df['brand'].value_counts().head(15).index
+    top_brands = df['brand'].value_counts().head(15).index if 'brand' in df.columns else []
+    if len(top_brands) == 0:
+        st.info("No hay columna 'brand' en el dataset para este gráfico.")
+        return None
     df_brands = df[df['brand'].isin(top_brands)]
-    
     brand_stats = df_brands.groupby('brand').agg({
-        'rating': ['mean', 'count'],
-        'ratingCount': 'sum'
+        'calificationNumbers.ratingValue': ['mean', 'count'],
+        'calificationNumbers.ratingCount': 'sum'
     }).round(2)
-    
     brand_stats.columns = ['rating_promedio', 'cantidad_perfumes', 'total_reviews']
     brand_stats = brand_stats.sort_values('rating_promedio', ascending=True)
-    
     fig = px.bar(
         brand_stats.reset_index(),
         x='rating_promedio',
@@ -277,13 +213,11 @@ def create_brand_performance():
         color='rating_promedio',
         color_continuous_scale=RATING_PALETTE
     )
-    
     fig.update_layout(
         height=600,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
-    
     return fig
 
 # Interfaz principal
@@ -299,17 +233,10 @@ def main():
     # Filtros
     min_rating = st.sidebar.slider("Rating Mínimo", 0.0, 5.0, 0.0, 0.1)
     min_reviews = st.sidebar.slider("Mínimo de Reviews", 0, 1000, 0, 10)
-    selected_genders = st.sidebar.multiselect(
-        "Géneros a Analizar",
-        df['gender'].unique(),
-        default=df['gender'].unique()
-    )
-    
     # Aplicar filtros
     df_filtered = df[
-        (df['rating'] >= min_rating) & 
-        (df['ratingCount'] >= min_reviews) & 
-        (df['gender'].isin(selected_genders))
+        (df['calificationNumbers.ratingValue'] >= min_rating) &
+        (df['calificationNumbers.ratingCount'] >= min_reviews)
     ]
     
     # Métricas principales
@@ -317,15 +244,12 @@ def main():
     
     with col1:
         st.metric("Perfumes Analizados", len(df_filtered))
-    
     with col2:
-        st.metric("Rating Promedio", f"{df_filtered['rating'].mean():.2f}")
-    
+        st.metric("Rating Promedio", f"{df_filtered['calificationNumbers.ratingValue'].mean():.2f}")
     with col3:
-        st.metric("Total de Reviews", f"{df_filtered['ratingCount'].sum():,}")
-    
+        st.metric("Total de Reviews", f"{df_filtered['calificationNumbers.ratingCount'].sum():,}")
     with col4:
-        st.metric("Mejor Calificado", f"{df_filtered['rating'].max():.2f}")
+        st.metric("Mejor Calificado", f"{df_filtered['calificationNumbers.ratingValue'].max():.2f}")
     
     st.markdown("---")
     
@@ -340,16 +264,14 @@ def main():
     
     # Fila 2: Box Plot y Radar Chart
     col1, col2 = st.columns(2)
-    
     with col1:
-        st.plotly_chart(create_rating_by_gender_boxplot(), use_container_width=True)
-    
+        box_fig = create_rating_by_gender_boxplot()
+        if box_fig:
+            st.plotly_chart(box_fig, use_container_width=True)
     with col2:
         radar_fig = create_performance_radar()
         if radar_fig:
             st.plotly_chart(radar_fig, use_container_width=True)
-        else:
-            st.info("Radar chart de performance no disponible - datos faltantes")
     
     # Fila 3: Tendencias de Rating
     st.plotly_chart(create_rating_trends(), use_container_width=True)
@@ -359,7 +281,6 @@ def main():
     
     # Fila 5: Top Perfumes
     st.plotly_chart(create_top_rated_perfumes(), use_container_width=True)
-    
     # Botón de descarga
     st.markdown("---")
     if st.button("Descargar Análisis de Calificaciones"):
@@ -377,7 +298,7 @@ def main():
         <body>
             <h1>Análisis de Calificaciones y Performance</h1>
             <p>Perfumes analizados: {len(df_filtered)}</p>
-            <p>Rating promedio: {df_filtered['rating'].mean():.2f}</p>
+            <p>Rating promedio: {df_filtered['calificationNumbers.ratingValue'].mean():.2f}</p>
             <div class="chart">{create_rating_distribution().to_html()}</div>
             <div class="chart">{create_rating_vs_reviews_scatter().to_html()}</div>
             <div class="chart">{create_rating_by_gender_boxplot().to_html()}</div>
@@ -387,7 +308,6 @@ def main():
         </body>
         </html>
         """
-        
         st.download_button(
             label="Descargar Reporte HTML",
             data=html_content,

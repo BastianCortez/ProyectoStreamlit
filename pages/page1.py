@@ -288,7 +288,7 @@ with col3:
             paper_bgcolor='white'
         )
         
-            fig_hist.update_xaxes(
+        fig_hist.update_xaxes(
             title_text="Intensidad (%)",
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',

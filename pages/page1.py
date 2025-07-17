@@ -241,18 +241,10 @@ with col2:
     
     # Mostrar tabla estilizada
     st.dataframe(
-        ranking_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Perfumes": st.column_config.BarColumn(
-                "Perfumes",
-                help="Número de perfumes que contienen este acorde",
-                min_value=0,
-                max_value=ranking_df['Perfumes'].max(),
-            ),
-        }
-    )
+    ranking_df,
+    use_container_width=True,
+    hide_index=True
+)
 
 # SEGUNDA FILA DE VISUALIZACIONES
 st.markdown("---")

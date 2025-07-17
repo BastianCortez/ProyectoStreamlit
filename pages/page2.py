@@ -4,26 +4,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from Utils.data_loader import load_perfume_data
 
-# Importar funciones propias (con manejo de errores para diferentes estructuras)
-try:
-    from Utils.data_loader import load_perfume_data
-except ImportError:
-    try:
-        from utils.data_loader import load_perfume_data
-    except ImportError:
-        # Fallback: definir función básica aquí
-        @st.cache_data
-        def load_perfume_data():
-            try:
-                df = pd.read_csv('data/perfumes_ordenado.csv')
-                accord_columns = [col for col in df.columns if col.startswith('accords.')]
-                df[accord_columns] = df[accord_columns].fillna(0)
-                return df
-            except Exception as e:
-                st.error(f"Error al cargar datos: {e}")
-                return pd.DataFrame()
-
+        
 # Configuración de la página
 st.set_page_config(
     page_title="Calificaciones y Performance",
@@ -96,29 +79,21 @@ def load_and_process_data():
                                            bins=[0, 10, 50, 200, 1000, float('inf')], 
                                            labels=['Nuevo', 'Poco Conocido', 'Conocido', 'Popular', 'Muy Popular'])
     
-    # Calcular score de longevidad ponderado
-    longevity_cols = ['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']
-    longevity_weights = [1, 2, 3, 4, 5]
-    df_clean['longevity_score'] = sum(df_clean[col].fillna(0) * weight for col, weight in zip(longevity_cols, longevity_weights))
+    # ELIMINAR CÁLCULOS DE LONGEVIDAD Y SILLAGE COMPLEJOS
+    # Solo mantener las categorías originales como están
     
-    # Calcular score de sillage ponderado
-    sillage_cols = ['sillage.suave', 'sillage.moderada', 'sillage.pesada', 'sillage.enorme']
-    sillage_weights = [1, 2, 3, 4]
-    df_clean['sillage_score'] = sum(df_clean[col].fillna(0) * weight for col, weight in zip(sillage_cols, sillage_weights))
-    
-    # Calcular score de precio ponderado
+    # Calcular score de precio ponderado (mantener solo este)
     price_cols = ['price.excelente_precio', 'price.buen_precio', 'price.precio_moderado', 'price.ligeramente_costoso', 'price.extremadamente_costoso']
     price_weights = [5, 4, 3, 2, 1]
     df_clean['value_score'] = sum(df_clean[col].fillna(0) * weight for col, weight in zip(price_cols, price_weights))
     
     return df_clean
 
-def create_rating_distribution():
+def create_rating_distribution(df_filtered):
     """Crea histograma de distribución de ratings"""
-    df = load_and_process_data()
     
     fig = px.histogram(
-        df, 
+        df_filtered, 
         x='rating', 
         nbins=25,
         title='Distribución de Calificaciones de Perfumes',
@@ -127,13 +102,14 @@ def create_rating_distribution():
     )
     
     # Añadir líneas estadísticas
-    mean_rating = df['rating'].mean()
-    median_rating = df['rating'].median()
-    
-    fig.add_vline(x=mean_rating, line_dash="dash", line_color=RATING_PALETTE[3], 
-                  annotation_text=f"Promedio: {mean_rating:.2f}")
-    fig.add_vline(x=median_rating, line_dash="dot", line_color=RATING_PALETTE[4], 
-                  annotation_text=f"Mediana: {median_rating:.2f}")
+    if len(df_filtered) > 0:
+        mean_rating = df_filtered['rating'].mean()
+        median_rating = df_filtered['rating'].median()
+        
+        fig.add_vline(x=mean_rating, line_dash="dash", line_color=RATING_PALETTE[3], 
+                      annotation_text=f"Promedio: {mean_rating:.2f}")
+        fig.add_vline(x=median_rating, line_dash="dot", line_color=RATING_PALETTE[4], 
+                      annotation_text=f"Mediana: {median_rating:.2f}")
     
     fig.update_layout(
         showlegend=False,
@@ -141,27 +117,28 @@ def create_rating_distribution():
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50')),
+        title=dict(font=dict(color='#2C3E50', size=14)),
         xaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         )
     )
     
     return fig
 
-def create_rating_vs_reviews_scatter():
+def create_rating_vs_reviews_scatter(df_filtered):
     """Crea scatter plot de rating vs número de reviews"""
-    df = load_and_process_data()
     
     fig = px.scatter(
-        df,
+        df_filtered,
         x='ratingCount',
         y='rating',
         color='gender_dominant',
@@ -178,16 +155,18 @@ def create_rating_vs_reviews_scatter():
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50')),
+        title=dict(font=dict(color='#2C3E50', size=14)),
         xaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         legend=dict(
             bgcolor='rgba(255,255,255,0.9)',
@@ -199,16 +178,15 @@ def create_rating_vs_reviews_scatter():
     
     return fig
 
-def create_sentiment_analysis():
+def create_sentiment_analysis(df_filtered):
     """Crea análisis de sentimientos por rating"""
-    df = load_and_process_data()
     
     sentiment_cols = ['calificationText.MeEncanta', 'calificationText.MeGusta', 
                      'calificationText.MeEsIndiferente', 'calificationText.NoMeGusta', 
                      'calificationText.LaOdio']
     
     # Calcular promedios por categoría de rating
-    sentiment_by_rating = df.groupby('rating_category')[sentiment_cols].mean()
+    sentiment_by_rating = df_filtered.groupby('rating_category')[sentiment_cols].mean()
     sentiment_by_rating.columns = ['Me Encanta', 'Me Gusta', 'Indiferente', 'No Me Gusta', 'La Odio']
     
     fig = px.bar(
@@ -225,16 +203,18 @@ def create_sentiment_analysis():
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50')),
+        title=dict(font=dict(color='#2C3E50', size=14)),
         xaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         legend=dict(
             bgcolor='rgba(255,255,255,0.9)',
@@ -246,20 +226,18 @@ def create_sentiment_analysis():
     
     return fig
 
-def create_performance_radar():
+def create_performance_radar(df_filtered):
     """Crea radar chart de características de performance por género"""
-    df = load_and_process_data()
     
-    performance_data = df.groupby('gender_dominant').agg({
-        'longevity_score': 'mean',
-        'sillage_score': 'mean',
+    performance_data = df_filtered.groupby('gender_dominant').agg({
         'rating': 'mean',
-        'value_score': 'mean'
+        'value_score': 'mean',
+        'ratingCount': 'mean'
     }).round(2)
     
     fig = go.Figure()
     
-    categories = ['Longevidad', 'Sillage', 'Rating', 'Relación Calidad-Precio']
+    categories = ['Rating', 'Relación Calidad-Precio', 'Popularidad Promedio']
     
     for i, gender in enumerate(performance_data.index):
         fig.add_trace(go.Scatterpolar(
@@ -287,7 +265,7 @@ def create_performance_radar():
         showlegend=True,
         title=dict(
             text="Performance Comparativo por Género",
-            font=dict(color='#2C3E50')
+            font=dict(color='#2C3E50', size=14)
         ),
         height=500,
         paper_bgcolor='white',
@@ -303,50 +281,55 @@ def create_performance_radar():
     
     return fig
 
-def create_longevity_sillage_analysis():
-    """Crea análisis de longevidad vs sillage"""
-    df = load_and_process_data()
+def create_longevity_analysis(df_filtered):
+    """Crea análisis de longevidad (distribución de votos)"""
+    longevity_cols = ['longevity.escasa', 'longevity.débil', 'longevity.moderada', 'longevity.duradera', 'longevity.muy_duradera']
+    longevity_labels = ['Escasa', 'Débil', 'Moderada', 'Duradera', 'Muy Duradera']
     
-    fig = px.scatter(
-        df,
-        x='longevity_score',
-        y='sillage_score',
-        color='rating',
-        size='ratingCount',
-        hover_data=['name', 'gender_dominant'],
-        title='Análisis de Longevidad vs Sillage',
-        labels={'longevity_score': 'Score de Longevidad', 'sillage_score': 'Score de Sillage'},
+    # Sumar todos los votos por categoría
+    longevity_votes = df_filtered[longevity_cols].sum()
+    longevity_votes.index = longevity_labels
+    
+    fig = px.bar(
+        x=longevity_votes.index,
+        y=longevity_votes.values,
+        title='Distribución de Votos por Longevidad',
+        labels={'x': 'Categoría de Longevidad', 'y': 'Total de Votos'},
+        color=longevity_votes.values,
         color_continuous_scale='Blues'
     )
     
     fig.update_layout(
-        height=500,
+        height=400,
         paper_bgcolor='white',
         plot_bgcolor='white',
         font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50')),
+        title=dict(font=dict(color='#2C3E50', size=14)),
         xaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
         yaxis=dict(
             gridcolor='#ECF0F1',
             linecolor='#BDC3C7',
             tickfont=dict(color='#2C3E50'),
+            title=dict(font=dict(color='#2C3E50'))
         ),
+        showlegend=False,
         coloraxis_colorbar=dict(
+            title=dict(font=dict(color='#2C3E50')),
             tickfont=dict(color='#2C3E50')
         )
     )
     
     return fig
 
-def create_gender_distribution():
+def create_gender_distribution(df_filtered):
     """Crea distribución de perfumes por género"""
-    df = load_and_process_data()
     
-    gender_counts = df['gender_dominant'].value_counts()
+    gender_counts = df_filtered['gender_dominant'].value_counts()
     gender_counts.index = gender_counts.index.str.replace('_', ' ').str.title()
     
     fig = px.pie(
@@ -361,7 +344,7 @@ def create_gender_distribution():
         height=400,
         paper_bgcolor='white',
         font=dict(color='#2C3E50'),
-        title=dict(font=dict(color='#2C3E50')),
+        title=dict(font=dict(color='#2C3E50', size=14)),
         legend=dict(
             bgcolor='rgba(255,255,255,0.9)',
             bordercolor='#ECF0F1',
@@ -393,64 +376,64 @@ def main():
     
     # Filtros avanzados
     with st.sidebar.expander("Filtros Avanzados"):
-        min_longevity = st.slider("Score Mínimo de Longevidad", 0.0, float(df['longevity_score'].max()), 0.0)
-        min_sillage = st.slider("Score Mínimo de Sillage", 0.0, float(df['sillage_score'].max()), 0.0)
+        min_value_score = st.slider("Score Mínimo de Precio", 0.0, float(df['value_score'].max()), 0.0)
     
     # Aplicar filtros
     df_filtered = df[
         (df['rating'] >= min_rating) & 
         (df['ratingCount'] >= min_reviews) & 
         (df['gender_dominant'].isin(selected_genders)) &
-        (df['longevity_score'] >= min_longevity) &
-        (df['sillage_score'] >= min_sillage)
+        (df['value_score'] >= min_value_score)
     ]
     
     # Métricas principales
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric("Perfumes Analizados", len(df_filtered))
     
     with col2:
-        st.metric("Rating Promedio", f"{df_filtered['rating'].mean():.2f}")
+        st.metric("Rating Promedio", f"{df_filtered['rating'].mean():.2f}" if len(df_filtered) > 0 else "N/A")
     
     with col3:
-        st.metric("Total Reviews", f"{df_filtered['ratingCount'].sum():,}")
+        st.metric("Total Reviews", f"{df_filtered['ratingCount'].sum():,}" if len(df_filtered) > 0 else "0")
     
     with col4:
-        st.metric("Longevidad Promedio", f"{df_filtered['longevity_score'].mean():.1f}")
-    
-    with col5:
-        st.metric("Sillage Promedio", f"{df_filtered['sillage_score'].mean():.1f}")
+        st.metric("Valor Promedio", f"{df_filtered['value_score'].mean():.1f}" if len(df_filtered) > 0 else "N/A")
     
     st.markdown("---")
+    
+    # Verificar si hay datos filtrados
+    if len(df_filtered) == 0:
+        st.warning("No hay perfumes que cumplan con los filtros seleccionados. Intenta ajustar los criterios.")
+        return
     
     # Fila 1: Distribución y Scatter Plot Principal
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_rating_distribution(), use_container_width=True)
+        st.plotly_chart(create_rating_distribution(df_filtered), use_container_width=True)
     
     with col2:
-        st.plotly_chart(create_rating_vs_reviews_scatter(), use_container_width=True)
+        st.plotly_chart(create_rating_vs_reviews_scatter(df_filtered), use_container_width=True)
     
     # Fila 2: Análisis de Sentimientos y Distribución por Género
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_sentiment_analysis(), use_container_width=True)
+        st.plotly_chart(create_sentiment_analysis(df_filtered), use_container_width=True)
     
     with col2:
-        st.plotly_chart(create_gender_distribution(), use_container_width=True)
+        st.plotly_chart(create_gender_distribution(df_filtered), use_container_width=True)
     
-    # Fila 3: Performance Radar y Longevidad vs Sillage
+    # Fila 3: Performance Radar y Análisis de Longevidad
     col1, col2 = st.columns(2)
     
     with col1:
-        st.plotly_chart(create_performance_radar(), use_container_width=True)
+        st.plotly_chart(create_performance_radar(df_filtered), use_container_width=True)
     
     with col2:
-        st.plotly_chart(create_longevity_sillage_analysis(), use_container_width=True)
+        st.plotly_chart(create_longevity_analysis(df_filtered), use_container_width=True)
     
     # Insights automáticos
     st.markdown("---")
@@ -473,8 +456,9 @@ def main():
     
     with col3:
         if len(df_filtered) > 0:
-            correlation = df_filtered['rating'].corr(df_filtered['longevity_score'])
-            st.info(f"**Correlación Rating-Longevidad:** {correlation:.2f}")
+            # Correlación entre rating y número de reviews
+            correlation = df_filtered['rating'].corr(df_filtered['ratingCount'])
+            st.info(f"**Correlación Rating-Popularidad:** {correlation:.2f}")
 
 if __name__ == "__main__":
     main()

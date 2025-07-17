@@ -329,7 +329,7 @@ fig = go.Figure(data=go.Bar(
 
 fig.update_layout(
     title=dict(
-        text="Frecuencia de los 10 Acordes Más Populares",
+        text="Frecuencia de los 5 Acordes Más Populares",
         font=dict(size=18, color='#2C3E50', family='Arial'),
         x=0.5
     ),

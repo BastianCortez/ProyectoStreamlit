@@ -366,7 +366,6 @@ yaxis=dict(
         gridcolor='#ECF0F1',
         linecolor='#BDC3C7'
     )
-)
 
 # Envolver el gráfico en un contenedor
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)

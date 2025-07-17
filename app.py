@@ -362,7 +362,7 @@ fig.update_layout(
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 st.plotly_chart(fig, use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
-    yaxis=dict(
+yaxis=dict(
         gridcolor='#ECF0F1',
         linecolor='#BDC3C7'
     )

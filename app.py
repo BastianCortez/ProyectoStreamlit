@@ -6,7 +6,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import io
-from utils import cargar_datos
+from data_loader import cargar_datos
+import seaborn as sns
 
 # Configuración de la página
 st.header("Visualización general del Dataset de Perfumes")
